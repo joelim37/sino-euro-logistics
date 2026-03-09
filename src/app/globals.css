@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #0D2545;
+  --navy-light: #1B4F9C;
+  --navy-dark: #081830;
+  --gold: #C8892A;
+  --gold-light: #D9A54A;
+  --gold-dark: #A67020;
+  --bg: #F7F9FC;
+  --foreground: #1A202C;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--bg);
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gold text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-gold-dark hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-navy text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-navy-light hover:shadow-lg;
+  }
+
+  .service-card {
+    @apply bg-white rounded-xl p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border-l-4 border-transparent hover:border-gold;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all duration-200;
+  }
+}
