@@ -32,12 +32,17 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!isLoginPage && status === "unauthenticated") {
       router.push("/admin/login");
     }
-  }, [status, router]);
+  }, [isLoginPage, status, router]);
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   if (status === "loading") {
     return (
