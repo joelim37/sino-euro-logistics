@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       revalidatePath(`/news/${body.slug}`);
       revalidatePath(`/news/preview/${body.id}`);
 
-      return NextResponse.json({ success: true, id: body.id, slug: body.slug, previewUrl: `/news/preview/${body.id}`, publishedUrl: `/news/${body.slug}` });
+      return NextResponse.json({ success: true, id: body.id, slug: body.slug, status: payload.status, previewUrl: `/news/preview/${body.id}`, publishedUrl: `/news/${body.slug}` });
     }
 
     const { data, error } = await supabase.from("news").insert(payload).select("id, slug").single();
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     revalidatePath(`/news/${data.slug}`);
     revalidatePath(`/news/preview/${data.id}`);
 
-    return NextResponse.json({ success: true, id: data.id, slug: data.slug, previewUrl: `/news/preview/${data.id}`, publishedUrl: `/news/${data.slug}` });
+    return NextResponse.json({ success: true, id: data.id, slug: data.slug, status: payload.status, previewUrl: `/news/preview/${data.id}`, publishedUrl: `/news/${data.slug}` });
   } catch {
     return NextResponse.json({ error: "服务器错误" }, { status: 500 });
   }

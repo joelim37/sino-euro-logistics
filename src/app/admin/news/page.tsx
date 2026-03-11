@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Edit2, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
+import { Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 
@@ -41,11 +41,22 @@ export default function NewsAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState<NewsItem>(emptyForm);
   const [isEditing, setIsEditing] = useState(false);
   const previewWindowRef = useRef<Window | null>(null);
 
   const canSave = useMemo(() => form.title.trim() && form.slug.trim(), [form.title, form.slug]);
+
+  const filteredNews = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return news;
+    return news.filter((item) =>
+      item.title.toLowerCase().includes(keyword) ||
+      item.slug.toLowerCase().includes(keyword) ||
+      item.summary.toLowerCase().includes(keyword)
+    );
+  }, [news, search]);
 
   const fetchNews = async () => {
     try {
@@ -72,7 +83,9 @@ export default function NewsAdminPage() {
   };
 
   const getPreviewUrl = (item: NewsItem) => {
-    if (item.id) return `/news/preview/${item.id}`;
+    if (item.id) {
+      return item.status === "published" ? `/news/${item.slug}` : `/news/preview/${item.id}`;
+    }
     return item.slug ? `/news/${item.slug}` : "";
   };
 
@@ -108,10 +121,8 @@ export default function NewsAdminPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "保存失败");
       await fetchNews();
-      const nextPreviewUrl = data.previewUrl || data.publishedUrl;
-      if (nextPreviewUrl) {
-        openPreview(nextPreviewUrl);
-      }
+      const nextUrl = form.status === "published" ? data.publishedUrl : data.previewUrl;
+      if (nextUrl) openPreview(nextUrl);
       setForm((prev) => ({
         ...prev,
         id: data.id || prev.id,
@@ -125,8 +136,8 @@ export default function NewsAdminPage() {
     }
   };
 
-  const handleDelete = async (id?: string) => {
-    if (!id || !confirm("确定要删除这篇新闻吗？")) return;
+  const handleDelete = async (id?: string, title?: string) => {
+    if (!id || !confirm(`确定要删除这篇新闻吗？\n\n${title || ""}`)) return;
     const response = await fetch(`/api/admin/news?id=${id}`, { method: "DELETE" });
     const data = await response.json();
     if (!response.ok) {
@@ -154,15 +165,27 @@ export default function NewsAdminPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
         <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm p-6 space-y-4 h-fit">
-          <h2 className="text-xl font-serif text-navy font-bold">已有新闻</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-serif text-navy font-bold">已有新闻</h2>
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-field pl-10"
+              placeholder="搜索标题 / slug / 摘要"
+            />
+          </div>
 
           {isLoading ? (
             <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gold" /></div>
-          ) : news.length === 0 ? (
-            <div className="text-gray-500 text-sm">还没有新闻，先创建第一篇。</div>
+          ) : filteredNews.length === 0 ? (
+            <div className="text-gray-500 text-sm">{search.trim() ? "没有匹配的新闻。" : "还没有新闻，先创建第一篇。"}</div>
           ) : (
             <div className="space-y-3">
-              {news.map((item) => (
+              {filteredNews.map((item) => (
                 <div key={item.id} className="border rounded-xl p-4 hover:border-gold transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -173,7 +196,7 @@ export default function NewsAdminPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <button onClick={() => openPreview(getPreviewUrl(item))} className="p-2 rounded-lg hover:bg-gray-100" title="预览文章"><ExternalLink className="w-4 h-4 text-navy" /></button>
                       <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
-                      <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
+                      <button onClick={() => handleDelete(item.id, item.title)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
                     </div>
                   </div>
                 </div>
@@ -205,7 +228,7 @@ export default function NewsAdminPage() {
             label="正文"
             value={form.content}
             onChange={(value) => setForm({ ...form, content: value })}
-            hint="支持标题、段落、加粗、列表、链接等基础富文本"
+            hint="支持标题、段落、加粗、列表、链接，也支持从媒体库直接插图"
           />
 
           <ImageUploadField
