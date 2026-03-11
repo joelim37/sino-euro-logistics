@@ -43,11 +43,34 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
     run("insertImage", cleanUrl);
   };
 
+  const buildImageHtml = (url: string, alt: string, style: string) => {
+    if (style === "wide") {
+      return `<figure style="margin:24px 0;"><img src="${url}" alt="${alt}" style="width:100%;height:auto;border-radius:16px;display:block;" /><figcaption style="margin-top:8px;font-size:14px;color:#6b7280;text-align:center;">${alt}</figcaption></figure>`;
+    }
+
+    if (style === "left") {
+      return `<img src="${url}" alt="${alt}" style="width:42%;max-width:320px;height:auto;border-radius:12px;float:left;margin:8px 20px 12px 0;" />`;
+    }
+
+    if (style === "right") {
+      return `<img src="${url}" alt="${alt}" style="width:42%;max-width:320px;height:auto;border-radius:12px;float:right;margin:8px 0 12px 20px;" />`;
+    }
+
+    return `<img src="${url}" alt="${alt}" style="max-width:100%;height:auto;border-radius:12px;margin:16px auto;display:block;" />`;
+  };
+
+  const askImageStyle = () => {
+    const raw = (window.prompt("图片样式：center / wide / left / right", "center") || "center").trim().toLowerCase();
+    if (["center", "wide", "left", "right"].includes(raw)) return raw;
+    return "center";
+  };
+
   const addImageFromMedia = (item: { url: string; name: string }) => {
     if (!editorRef.current) return;
     editorRef.current.focus();
-    const alt = window.prompt("请输入图片 alt 文本（可选）", item.name.replace(/\.[^/.]+$/, "")) || "";
-    const html = `<img src="${item.url}" alt="${alt.replace(/"/g, "&quot;")}" style="max-width:100%;height:auto;border-radius:12px;margin:16px 0;" />`;
+    const alt = (window.prompt("请输入图片 alt 文本（可选）", item.name.replace(/\.[^/.]+$/, "")) || "").replace(/"/g, "&quot;");
+    const style = askImageStyle();
+    const html = buildImageHtml(item.url, alt, style);
     document.execCommand("insertHTML", false, html);
     syncValue();
     setShowMediaPicker(false);

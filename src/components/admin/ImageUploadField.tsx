@@ -9,6 +9,7 @@ interface ImageUploadFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onSelectMedia?: (item: { name: string; path: string; url: string; folder: string }) => void;
   folder?: string;
   placeholder?: string;
   hint?: string;
@@ -18,6 +19,7 @@ export default function ImageUploadField({
   label,
   value,
   onChange,
+  onSelectMedia,
   folder = "general",
   placeholder = "请输入图片 URL 或上传本地图片",
   hint,
@@ -50,6 +52,7 @@ export default function ImageUploadField({
       }
 
       onChange(data.url);
+      onSelectMedia?.({ name: file.name, path: data.path, url: data.url, folder });
     } catch (err) {
       setError(err instanceof Error ? err.message : "上传失败");
     } finally {
@@ -130,6 +133,7 @@ export default function ImageUploadField({
         onClose={() => setShowMediaPicker(false)}
         onSelect={(item) => {
           onChange(item.url);
+          onSelectMedia?.(item);
           setShowMediaPicker(false);
         }}
       />

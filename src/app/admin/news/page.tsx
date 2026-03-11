@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import Toast from "@/components/admin/Toast";
@@ -20,6 +20,8 @@ interface NewsItem {
   seo_keywords: string;
   status: "draft" | "published";
   published_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const emptyForm: NewsItem = {
@@ -38,6 +40,7 @@ const emptyForm: NewsItem = {
 };
 
 const DRAFT_STORAGE_KEY = "news-admin-draft";
+const ITEMS_PER_PAGE = 6;
 
 const slugify = (value: string) =>
   value
@@ -47,6 +50,13 @@ const slugify = (value: string) =>
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 
+const suggestAltFromName = (name: string) =>
+  name
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 export default function NewsAdminPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +64,8 @@ export default function NewsAdminPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
+  const [sortBy, setSortBy] = useState<"updated_desc" | "updated_asc" | "title_asc" | "title_desc">("updated_desc");
+  const [page, setPage] = useState(1);
   const [form, setForm] = useState<NewsItem>(emptyForm);
   const [isEditing, setIsEditing] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
@@ -65,6 +77,7 @@ export default function NewsAdminPage() {
   const previewWindowRef = useRef<Window | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const dbAutosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasLoadedDraftRef = useRef(false);
 
   const canSave = useMemo(() => form.title.trim() && form.slug.trim(), [form.title, form.slug]);
@@ -79,7 +92,7 @@ export default function NewsAdminPage() {
 
   const filteredNews = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    return news.filter((item) => {
+    let result = news.filter((item) => {
       const statusMatch = statusFilter === "all" || item.status === statusFilter;
       const keywordMatch =
         !keyword ||
@@ -88,7 +101,33 @@ export default function NewsAdminPage() {
         item.summary.toLowerCase().includes(keyword);
       return statusMatch && keywordMatch;
     });
-  }, [news, search, statusFilter]);
+
+    result = [...result].sort((a, b) => {
+      if (sortBy === "title_asc") return a.title.localeCompare(b.title);
+      if (sortBy === "title_desc") return b.title.localeCompare(a.title);
+
+      const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
+      if (sortBy === "updated_asc") return aTime - bTime;
+      return bTime - aTime;
+    });
+
+    return result;
+  }, [news, search, statusFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredNews.length / ITEMS_PER_PAGE));
+  const pagedNews = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filteredNews.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredNews, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, sortBy]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const fetchNews = async () => {
     try {
@@ -113,9 +152,10 @@ export default function NewsAdminPage() {
       const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft) as { form: NewsItem; slugTouched: boolean };
-        if (parsed?.form && !parsed.form.id) {
+        if (parsed?.form) {
           setForm(parsed.form);
           setSlugTouched(Boolean(parsed.slugTouched));
+          setIsEditing(Boolean(parsed.form.id));
           showToast("已恢复上次未保存的草稿");
         }
       }
@@ -128,12 +168,12 @@ export default function NewsAdminPage() {
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+      if (dbAutosaveTimerRef.current) clearTimeout(dbAutosaveTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
     if (!hasLoadedDraftRef.current) return;
-    if (form.id) return;
 
     const hasContent = Object.values(form).some((value) => typeof value === "string" && value.trim());
 
@@ -153,6 +193,41 @@ export default function NewsAdminPage() {
       );
     }, 800);
   }, [form, slugTouched]);
+
+  useEffect(() => {
+    if (!hasLoadedDraftRef.current) return;
+    if (!form.title.trim() || !form.slug.trim()) return;
+    if (isSaving) return;
+
+    if (dbAutosaveTimerRef.current) clearTimeout(dbAutosaveTimerRef.current);
+
+    dbAutosaveTimerRef.current = setTimeout(async () => {
+      try {
+        const draftPayload = {
+          ...form,
+          status: "draft",
+        };
+
+        const response = await fetch("/api/admin/news", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draftPayload),
+        });
+
+        const data = await response.json();
+        if (!response.ok) return;
+
+        setForm((prev) => ({
+          ...prev,
+          id: data.id || prev.id,
+          slug: data.slug || prev.slug,
+        }));
+        setIsEditing(true);
+      } catch {
+        // keep silent for background autosave
+      }
+    }, 2500);
+  }, [form.title, form.slug, form.summary, form.content, form.featured_image, form.featured_image_alt, form.og_image, form.seo_title, form.seo_description, form.seo_keywords]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -298,40 +373,66 @@ export default function NewsAdminPage() {
               ))}
             </div>
 
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="input-field">
+              <option value="updated_desc">按更新时间：最新</option>
+              <option value="updated_asc">按更新时间：最早</option>
+              <option value="title_asc">按标题：A-Z</option>
+              <option value="title_desc">按标题：Z-A</option>
+            </select>
+
             {isLoading ? (
               <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gold" /></div>
-            ) : filteredNews.length === 0 ? (
+            ) : pagedNews.length === 0 ? (
               <div className="text-gray-500 text-sm">{search.trim() || statusFilter !== "all" ? "没有匹配的新闻。" : "还没有新闻，先创建第一篇。"}</div>
             ) : (
-              <div className="space-y-3">
-                {filteredNews.map((item) => (
-                  <div key={item.id} className="border rounded-xl p-4 hover:border-gold transition-colors">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-navy truncate">{item.title}</h3>
-                        <p className="text-sm text-gray-500 truncate">/{item.slug}</p>
-                        <p className="text-xs mt-2 inline-flex px-2 py-1 rounded bg-gray-100 text-gray-600">{item.status === "published" ? "已发布" : "草稿"}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => openPreview(getPreviewUrl(item))} className="p-2 rounded-lg hover:bg-gray-100" title="预览文章"><ExternalLink className="w-4 h-4 text-navy" /></button>
-                        <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); setSlugTouched(true); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
-                        <button onClick={() => handleDelete(item.id, item.title)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
+              <>
+                <div className="space-y-3">
+                  {pagedNews.map((item) => (
+                    <div key={item.id} className="border rounded-xl p-4 hover:border-gold transition-colors">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-navy truncate">{item.title}</h3>
+                          <p className="text-sm text-gray-500 truncate">/{item.slug}</p>
+                          <p className="text-xs mt-2 inline-flex px-2 py-1 rounded bg-gray-100 text-gray-600">{item.status === "published" ? "已发布" : "草稿"}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => openPreview(getPreviewUrl(item))} className="p-2 rounded-lg hover:bg-gray-100" title="预览文章"><ExternalLink className="w-4 h-4 text-navy" /></button>
+                          <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); setSlugTouched(true); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
+                          <button onClick={() => handleDelete(item.id, item.title)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between pt-2 text-sm text-gray-500">
+                  <span>第 {page} / {totalPages} 页</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50">
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50">
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              </>
             )}
           </div>
 
           <div className="xl:col-span-3 bg-white rounded-2xl shadow-sm p-6 space-y-5">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <h2 className="text-xl font-serif text-navy font-bold">{isEditing ? "编辑新闻" : "新建新闻"}</h2>
-              {!form.id && (
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1">
-                  正在自动保存本地草稿
+                  自动保存：本地 + 数据库草稿
                 </span>
-              )}
+                {form.featured_image_alt && (
+                  <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 truncate max-w-[260px]">
+                    Alt 建议：{form.featured_image_alt}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -354,13 +455,21 @@ export default function NewsAdminPage() {
               label="正文"
               value={form.content}
               onChange={(value) => setForm({ ...form, content: value })}
-              hint="支持标题、段落、加粗、列表、链接，也支持从媒体库直接插图"
+              hint="插图时可选 center / wide / left / right 样式"
             />
 
             <ImageUploadField
               label="封面图片"
               value={form.featured_image}
               onChange={(value) => setForm({ ...form, featured_image: value })}
+              onSelectMedia={(item) => {
+                const suggestedAlt = suggestAltFromName(item.name);
+                setForm((prev) => ({
+                  ...prev,
+                  featured_image: item.url,
+                  featured_image_alt: prev.featured_image_alt.trim() ? prev.featured_image_alt : suggestedAlt,
+                }));
+              }}
               folder="news"
               hint="支持媒体库选择或上传本地图片"
             />
