@@ -4,12 +4,19 @@ import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing");
+  }
+
+  return createClient(url, key);
+}
 
 async function ensureNewsTable() {
+  const supabase = getSupabase();
   const { error } = await supabase.from("news").select("id").limit(1);
   if (!error) return;
 
@@ -32,8 +39,8 @@ async function ensureNewsTable() {
   updated_at timestamptz default now()
 );
 alter table news enable row level security;
-create policy if not exists \"news_public_read\" on news for select to anon using (status = 'published');
-create policy if not exists \"news_auth_all\" on news for all to authenticated using (true) with check (true);`
+create policy if not exists "news_public_read" on news for select to anon using (status = 'published');
+create policy if not exists "news_auth_all" on news for all to authenticated using (true) with check (true);`
     },
     { status: 500 }
   );
@@ -45,20 +52,25 @@ export async function GET() {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
-  const ensured = await ensureNewsTable();
-  if (ensured) return ensured;
+  try {
+    const ensured = await ensureNewsTable();
+    if (ensured) return ensured;
 
-  const { data, error } = await supabase
-    .from("news")
-    .select("*")
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("news")
+      .select("*")
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ news: data || [] });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "服务器错误" }, { status: 500 });
   }
-
-  return NextResponse.json({ news: data || [] });
 }
 
 export async function POST(request: NextRequest) {
@@ -67,10 +79,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
-  const ensured = await ensureNewsTable();
-  if (ensured) return ensured;
-
   try {
+    const ensured = await ensureNewsTable();
+    if (ensured) return ensured;
+
+    const supabase = getSupabase();
     const body = await request.json();
     const payload = {
       title: body.title,
@@ -109,8 +122,8 @@ export async function POST(request: NextRequest) {
     revalidatePath(`/news/preview/${data.id}`);
 
     return NextResponse.json({ success: true, id: data.id, slug: data.slug, status: payload.status, previewUrl: `/news/preview/${data.id}`, publishedUrl: `/news/${data.slug}` });
-  } catch {
-    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "服务器错误" }, { status: 500 });
   }
 }
 
@@ -120,14 +133,19 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  if (!id) {
-    return NextResponse.json({ error: "缺少ID" }, { status: 400 });
+  try {
+    const supabase = getSupabase();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "缺少ID" }, { status: 400 });
+    }
+
+    const { error } = await supabase.from("news").delete().eq("id", id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "服务器错误" }, { status: 500 });
   }
-
-  const { error } = await supabase.from("news").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
 }

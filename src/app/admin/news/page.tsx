@@ -37,6 +37,8 @@ const emptyForm: NewsItem = {
   published_at: null,
 };
 
+const DRAFT_STORAGE_KEY = "news-admin-draft";
+
 const slugify = (value: string) =>
   value
     .toLowerCase()
@@ -51,6 +53,7 @@ export default function NewsAdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
   const [form, setForm] = useState<NewsItem>(emptyForm);
   const [isEditing, setIsEditing] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
@@ -61,6 +64,8 @@ export default function NewsAdminPage() {
   });
   const previewWindowRef = useRef<Window | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedDraftRef = useRef(false);
 
   const canSave = useMemo(() => form.title.trim() && form.slug.trim(), [form.title, form.slug]);
 
@@ -74,13 +79,16 @@ export default function NewsAdminPage() {
 
   const filteredNews = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    if (!keyword) return news;
-    return news.filter((item) =>
-      item.title.toLowerCase().includes(keyword) ||
-      item.slug.toLowerCase().includes(keyword) ||
-      item.summary.toLowerCase().includes(keyword)
-    );
-  }, [news, search]);
+    return news.filter((item) => {
+      const statusMatch = statusFilter === "all" || item.status === statusFilter;
+      const keywordMatch =
+        !keyword ||
+        item.title.toLowerCase().includes(keyword) ||
+        item.slug.toLowerCase().includes(keyword) ||
+        item.summary.toLowerCase().includes(keyword);
+      return statusMatch && keywordMatch;
+    });
+  }, [news, search, statusFilter]);
 
   const fetchNews = async () => {
     try {
@@ -100,16 +108,58 @@ export default function NewsAdminPage() {
 
   useEffect(() => {
     fetchNews();
+
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft) as { form: NewsItem; slugTouched: boolean };
+        if (parsed?.form && !parsed.form.id) {
+          setForm(parsed.form);
+          setSlugTouched(Boolean(parsed.slugTouched));
+          showToast("已恢复上次未保存的草稿");
+        }
+      }
+    } catch {
+      // ignore draft restore errors
+    } finally {
+      hasLoadedDraftRef.current = true;
+    }
+
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasLoadedDraftRef.current) return;
+    if (form.id) return;
+
+    const hasContent = Object.values(form).some((value) => typeof value === "string" && value.trim());
+
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+
+    autosaveTimerRef.current = setTimeout(() => {
+      if (!hasContent) {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        return;
+      }
+      localStorage.setItem(
+        DRAFT_STORAGE_KEY,
+        JSON.stringify({
+          form,
+          slugTouched,
+        })
+      );
+    }, 800);
+  }, [form, slugTouched]);
 
   const resetForm = () => {
     setForm(emptyForm);
     setIsEditing(false);
     setSlugTouched(false);
     previewWindowRef.current = null;
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
   };
 
   const getPreviewUrl = (item: NewsItem) => {
@@ -174,6 +224,7 @@ export default function NewsAdminPage() {
         slug: data.slug || prev.slug,
       }));
       setIsEditing(true);
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
       showToast(form.status === "published" ? "新闻已保存并打开正式文章页" : "草稿已保存并打开预览页");
     } catch (err) {
       const message = err instanceof Error ? err.message : "保存失败";
@@ -231,10 +282,26 @@ export default function NewsAdminPage() {
               />
             </div>
 
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: "all", label: "全部" },
+                { key: "draft", label: "草稿" },
+                { key: "published", label: "已发布" },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => setStatusFilter(item.key as "all" | "draft" | "published")}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${statusFilter === item.key ? "bg-navy text-white border-navy" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
             {isLoading ? (
               <div className="py-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gold" /></div>
             ) : filteredNews.length === 0 ? (
-              <div className="text-gray-500 text-sm">{search.trim() ? "没有匹配的新闻。" : "还没有新闻，先创建第一篇。"}</div>
+              <div className="text-gray-500 text-sm">{search.trim() || statusFilter !== "all" ? "没有匹配的新闻。" : "还没有新闻，先创建第一篇。"}</div>
             ) : (
               <div className="space-y-3">
                 {filteredNews.map((item) => (
@@ -258,7 +325,14 @@ export default function NewsAdminPage() {
           </div>
 
           <div className="xl:col-span-3 bg-white rounded-2xl shadow-sm p-6 space-y-5">
-            <h2 className="text-xl font-serif text-navy font-bold">{isEditing ? "编辑新闻" : "新建新闻"}</h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-xl font-serif text-navy font-bold">{isEditing ? "编辑新闻" : "新建新闻"}</h2>
+              {!form.id && (
+                <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1">
+                  正在自动保存本地草稿
+                </span>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

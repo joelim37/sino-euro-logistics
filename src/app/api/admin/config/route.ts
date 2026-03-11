@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing");
+  }
+
+  return createClient(url, key);
+}
 
 // GET - 获取配置
 export async function GET(request: NextRequest) {
@@ -20,6 +26,7 @@ export async function GET(request: NextRequest) {
   const keysParam = searchParams.get("keys");
 
   try {
+    const supabase = getSupabase();
     let query = supabase.from("site_config").select("key, value");
 
     if (keysParam) {
@@ -41,7 +48,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ config });
   } catch (error) {
     return NextResponse.json(
-      { error: "服务器错误" },
+      { error: error instanceof Error ? error.message : "服务器错误" },
       { status: 500 }
     );
   }
@@ -56,9 +63,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const supabase = getSupabase();
     const body = await request.json();
 
-    // 支持批量更新
     const updates = Object.entries(body).map(([key, value]) => ({
       key,
       value: value as string,
@@ -79,7 +86,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: "服务器错误" },
+      { error: error instanceof Error ? error.message : "服务器错误" },
       { status: 500 }
     );
   }
