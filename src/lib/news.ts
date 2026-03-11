@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { unstable_noStore as noStore } from "next/cache";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,8 @@ export interface NewsItem {
 }
 
 export async function getPublishedNews(limit?: number) {
+  noStore();
+
   let query = supabase
     .from("news")
     .select("*")
@@ -46,6 +49,8 @@ export async function getPublishedNews(limit?: number) {
 }
 
 export async function getNewsBySlug(slug: string) {
+  noStore();
+
   const { data, error } = await supabase
     .from("news")
     .select("*")
