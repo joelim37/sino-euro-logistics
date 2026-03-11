@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { Award, Users, Globe, TrendingUp } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig } from "@/lib/data";

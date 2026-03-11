@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
@@ -82,6 +83,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
     }
+
+    revalidatePath("/");
+    revalidatePath("/about");
+    revalidatePath("/services");
+    revalidatePath("/contact");
 
     return NextResponse.json({ success: true });
   } catch (error) {

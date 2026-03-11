@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing");
+  }
+
+  return createClient(url, key);
+}
+
+function revalidateServicePages() {
+  revalidatePath("/");
+  revalidatePath("/services");
+}
 
 // GET - 获取所有服务
 export async function GET() {
@@ -17,6 +29,7 @@ export async function GET() {
   }
 
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from("services")
       .select("*")
@@ -29,7 +42,7 @@ export async function GET() {
     return NextResponse.json({ services: data });
   } catch (error) {
     return NextResponse.json(
-      { error: "服务器错误" },
+      { error: error instanceof Error ? error.message : "服务器错误" },
       { status: 500 }
     );
   }
@@ -44,6 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const supabase = getSupabase();
     const body = await request.json();
 
     const { error } = await supabase.from("services").insert({
@@ -64,9 +78,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidateServicePages();
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "服务器错误" }, { status: 500 });
   }
 }
 
@@ -79,6 +94,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
+    const supabase = getSupabase();
     const body = await request.json();
 
     const { error } = await supabase
@@ -101,10 +117,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidateServicePages();
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: "服务器错误" },
+      { error: error instanceof Error ? error.message : "服务器错误" },
       { status: 500 }
     );
   }
@@ -126,6 +143,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
+    const supabase = getSupabase();
     const { error } = await supabase
       .from("services")
       .delete()
@@ -135,10 +153,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    revalidateServicePages();
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: "服务器错误" },
+      { error: error instanceof Error ? error.message : "服务器错误" },
       { status: 500 }
     );
   }

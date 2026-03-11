@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { unstable_noStore as noStore } from "next/cache";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -6,6 +7,7 @@ const supabase = createClient(
 );
 
 export async function getSiteConfig() {
+  noStore();
   const { data, error } = await supabase
     .from("site_config")
     .select("key, value");
@@ -24,6 +26,7 @@ export async function getSiteConfig() {
 }
 
 export async function getServices() {
+  noStore();
   const { data, error } = await supabase
     .from("services")
     .select("*")
@@ -39,6 +42,7 @@ export async function getServices() {
 }
 
 export async function getServiceBySlug(slug: string) {
+  noStore();
   const { data, error } = await supabase
     .from("services")
     .select("*")
