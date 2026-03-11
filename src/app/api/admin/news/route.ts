@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
@@ -90,13 +91,24 @@ export async function POST(request: NextRequest) {
     if (body.id) {
       const { error } = await supabase.from("news").update(payload).eq("id", body.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ success: true });
+
+      revalidatePath("/");
+      revalidatePath("/news");
+      revalidatePath(`/news/${body.slug}`);
+      revalidatePath(`/news/preview/${body.id}`);
+
+      return NextResponse.json({ success: true, id: body.id, slug: body.slug, previewUrl: `/news/preview/${body.id}`, publishedUrl: `/news/${body.slug}` });
     }
 
-    const { error } = await supabase.from("news").insert(payload);
+    const { data, error } = await supabase.from("news").insert(payload).select("id, slug").single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ success: true });
+    revalidatePath("/");
+    revalidatePath("/news");
+    revalidatePath(`/news/${data.slug}`);
+    revalidatePath(`/news/preview/${data.id}`);
+
+    return NextResponse.json({ success: true, id: data.id, slug: data.slug, previewUrl: `/news/preview/${data.id}`, publishedUrl: `/news/${data.slug}` });
   } catch {
     return NextResponse.json({ error: "服务器错误" }, { status: 500 });
   }

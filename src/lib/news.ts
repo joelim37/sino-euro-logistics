@@ -64,3 +64,19 @@ export async function getNewsBySlug(slug: string) {
 
   return data as NewsItem;
 }
+
+export async function getNewsPreviewById(id: string) {
+  noStore();
+
+  const { data, error } = await supabase
+    .from("news")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    return null;
+  }
+
+  return data as NewsItem;
+}

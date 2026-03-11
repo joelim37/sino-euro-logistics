@@ -11,7 +11,7 @@ interface MediaItem {
   folder: string;
 }
 
-const folderOptions = ["all", "banner", "services", "news", "media-library"];
+const folderOptions = ["all", "banner", "services", "news", "news-og", "media-library"];
 
 export default function MediaAdminPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -21,6 +21,7 @@ export default function MediaAdminPage() {
   const [folder, setFolder] = useState("all");
   const [uploadFolder, setUploadFolder] = useState("media-library");
   const [newName, setNewName] = useState("");
+  const [search, setSearch] = useState("");
   const [highlightedPath, setHighlightedPath] = useState("");
 
   const fetchMedia = async (nextFolder = folder) => {
@@ -98,10 +99,17 @@ export default function MediaAdminPage() {
     alert("图片地址已复制");
   };
 
+  const filteredItems = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    if (!keyword) return items;
+    return items.filter((item) => item.name.toLowerCase().includes(keyword) || item.path.toLowerCase().includes(keyword));
+  }, [items, search]);
+
   const emptyText = useMemo(() => {
+    if (search.trim()) return "没有搜到匹配的图片文件名。";
     if (folder === "all") return "媒体库暂时为空，先上传几张图片吧。";
     return `当前 ${folder} 分类下还没有图片。`;
-  }, [folder]);
+  }, [folder, search]);
 
   return (
     <div className="space-y-8">
@@ -132,6 +140,15 @@ export default function MediaAdminPage() {
 
       {error && <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-200">{error}</div>}
 
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="input-field"
+          placeholder="按文件名搜索，例如：banner、logo、poland"
+        />
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {folderOptions.map((item) => (
           <button
@@ -146,11 +163,11 @@ export default function MediaAdminPage() {
 
       {isLoading ? (
         <div className="py-16 text-center"><Loader2 className="w-8 h-8 animate-spin text-gold mx-auto" /></div>
-      ) : items.length === 0 ? (
+      ) : filteredItems.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm p-12 text-center text-gray-500">{emptyText}</div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
-          {items.map((item) => {
+          {filteredItems.map((item) => {
             const isHighlighted = highlightedPath === item.path;
             return (
               <div key={item.path} className={`group bg-white rounded-2xl shadow-sm overflow-hidden border transition-all ${isHighlighted ? "border-gold ring-2 ring-gold/30" : "border-gray-100"}`}>

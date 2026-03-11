@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading1, Heading2, Pilcrow } from "lucide-react";
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading1, Heading2, Pilcrow, Image as ImageIcon } from "lucide-react";
 
 interface RichTextEditorProps {
   label: string;
@@ -9,6 +9,8 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   hint?: string;
 }
+
+const sanitizeImageUrl = (url: string) => url.trim();
 
 export default function RichTextEditor({ label, value, onChange, hint }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -26,6 +28,14 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
     run("createLink", url);
   };
 
+  const addImage = () => {
+    const url = window.prompt("请输入插图图片 URL");
+    if (!url) return;
+    const cleanUrl = sanitizeImageUrl(url);
+    if (!cleanUrl) return;
+    run("insertImage", cleanUrl);
+  };
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
@@ -39,6 +49,7 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
           <button type="button" onClick={() => run("insertUnorderedList")} className="px-3 py-2 rounded hover:bg-gray-200"><List className="w-4 h-4" /></button>
           <button type="button" onClick={() => run("insertOrderedList")} className="px-3 py-2 rounded hover:bg-gray-200"><ListOrdered className="w-4 h-4" /></button>
           <button type="button" onClick={addLink} className="px-3 py-2 rounded hover:bg-gray-200"><LinkIcon className="w-4 h-4" /></button>
+          <button type="button" onClick={addImage} className="px-3 py-2 rounded hover:bg-gray-200" title="插入图片"><ImageIcon className="w-4 h-4" /></button>
         </div>
 
         <div

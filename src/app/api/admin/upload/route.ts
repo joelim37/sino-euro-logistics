@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 const BUCKET = "site-media";
-const ALLOWED_FOLDERS = ["banner", "services", "news", "media-library", "general"];
+const ALLOWED_FOLDERS = ["banner", "services", "news", "news-og", "media-library", "general"];
 
 async function ensureBucket() {
   const { data } = await supabase.storage.listBuckets();

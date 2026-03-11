@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Edit2, Loader2, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Edit2, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 
@@ -43,6 +43,7 @@ export default function NewsAdminPage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState<NewsItem>(emptyForm);
   const [isEditing, setIsEditing] = useState(false);
+  const previewWindowRef = useRef<Window | null>(null);
 
   const canSave = useMemo(() => form.title.trim() && form.slug.trim(), [form.title, form.slug]);
 
@@ -67,6 +68,31 @@ export default function NewsAdminPage() {
   const resetForm = () => {
     setForm(emptyForm);
     setIsEditing(false);
+    previewWindowRef.current = null;
+  };
+
+  const getPreviewUrl = (item: NewsItem) => {
+    if (item.id) return `/news/preview/${item.id}`;
+    return item.slug ? `/news/${item.slug}` : "";
+  };
+
+  const openPreview = (url: string) => {
+    if (!url) return;
+    if (previewWindowRef.current && !previewWindowRef.current.closed) {
+      previewWindowRef.current.location.href = url;
+      previewWindowRef.current.focus();
+      return;
+    }
+    previewWindowRef.current = window.open(url, "news-preview-window");
+  };
+
+  const handlePreview = () => {
+    const previewUrl = getPreviewUrl(form);
+    if (!previewUrl) {
+      setError("请先填写 slug 后再预览");
+      return;
+    }
+    openPreview(previewUrl);
   };
 
   const handleSave = async () => {
@@ -82,7 +108,16 @@ export default function NewsAdminPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "保存失败");
       await fetchNews();
-      resetForm();
+      const nextPreviewUrl = data.previewUrl || data.publishedUrl;
+      if (nextPreviewUrl) {
+        openPreview(nextPreviewUrl);
+      }
+      setForm((prev) => ({
+        ...prev,
+        id: data.id || prev.id,
+        slug: data.slug || prev.slug,
+      }));
+      setIsEditing(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败");
     } finally {
@@ -136,8 +171,9 @@ export default function NewsAdminPage() {
                       <p className="text-xs mt-2 inline-flex px-2 py-1 rounded bg-gray-100 text-gray-600">{item.status === "published" ? "已发布" : "草稿"}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); }} className="p-2 rounded-lg hover:bg-gray-100"><Edit2 className="w-4 h-4 text-navy" /></button>
-                      <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg hover:bg-red-50"><Trash2 className="w-4 h-4 text-red-500" /></button>
+                      <button onClick={() => openPreview(getPreviewUrl(item))} className="p-2 rounded-lg hover:bg-gray-100" title="预览文章"><ExternalLink className="w-4 h-4 text-navy" /></button>
+                      <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
+                      <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
                     </div>
                   </div>
                 </div>
@@ -224,7 +260,11 @@ export default function NewsAdminPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-2 flex-wrap">
+            <button onClick={handlePreview} disabled={!form.slug.trim()} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 inline-flex items-center gap-2 disabled:opacity-60">
+              <ExternalLink className="w-4 h-4" />
+              预览文章
+            </button>
             <button onClick={resetForm} className="px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-600">取消</button>
             <button onClick={handleSave} disabled={!canSave || isSaving} className="btn-primary disabled:opacity-60 inline-flex items-center gap-2">
               {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
