@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Save, Trash2, Plus, Loader2, Edit2, X } from "lucide-react";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 interface Service {
   id: string;
@@ -304,22 +305,18 @@ export default function ServicesAdminPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    图片 URL
-                  </label>
-                  <input
-                    type="url"
-                    value={editingService.image}
-                    onChange={(e) =>
-                      setEditingService({
-                        ...editingService,
-                        image: e.target.value,
-                      })
-                    }
-                    className="input-field"
-                  />
-                </div>
+                <ImageUploadField
+                  label="服务图片"
+                  value={editingService.image}
+                  onChange={(value) =>
+                    setEditingService({
+                      ...editingService,
+                      image: value,
+                    })
+                  }
+                  folder="services"
+                  hint="可直接上传电脑本地图片"
+                />
 
                 <div className="flex items-center gap-4">
                   <label className="flex items-center space-x-2">

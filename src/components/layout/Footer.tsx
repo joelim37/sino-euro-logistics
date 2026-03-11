@@ -53,6 +53,11 @@ export default function Footer({
                 </Link>
               </li>
               <li>
+                <Link href="/news" className="text-gray-300 hover:text-gold transition-colors">
+                  新闻
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="text-gray-300 hover:text-gold transition-colors">
                   关于我们
                 </Link>

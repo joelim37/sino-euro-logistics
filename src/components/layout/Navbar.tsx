@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 const navLinks = [
   { href: "/", label: "首页" },
   { href: "/services", label: "服务项目" },
+  { href: "/news", label: "新闻" },
   { href: "/about", label: "关于我们" },
   { href: "/contact", label: "联系我们" },
 ];

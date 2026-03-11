@@ -19,6 +19,7 @@ import { useState } from "react";
 const navItems = [
   { href: "/admin/banner", label: "Banner管理", icon: Image },
   { href: "/admin/services", label: "服务管理", icon: Package },
+  { href: "/admin/news", label: "新闻管理", icon: MessageSquare },
   { href: "/admin/inquiries", label: "询价记录", icon: MessageSquare },
   { href: "/admin/settings", label: "网站设置", icon: Settings },
 ];

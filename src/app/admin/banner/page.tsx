@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Save, Upload, Loader2 } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 interface BannerConfig {
   banner_title: string;
@@ -111,25 +112,13 @@ export default function BannerAdminPage() {
 
         {/* Form */}
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Banner 图片 URL
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={config.banner_image}
-                onChange={(e) =>
-                  setConfig({ ...config, banner_image: e.target.value })
-                }
-                className="input-field flex-1"
-                placeholder="请输入图片URL"
-              />
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              建议尺寸：1920x1080，推荐使用高清物流相关图片
-            </p>
-          </div>
+          <ImageUploadField
+            label="Banner 图片"
+            value={config.banner_image}
+            onChange={(value) => setConfig({ ...config, banner_image: value })}
+            folder="banner"
+            hint="建议尺寸：1920x1080，可直接上传本地图片"
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
