@@ -9,6 +9,7 @@ const supabase = createClient(
 );
 
 const BUCKET = "site-media";
+const ALLOWED_FOLDERS = ["banner", "services", "news", "media-library", "general"];
 
 async function ensureBucket() {
   const { data } = await supabase.storage.listBuckets();
@@ -27,16 +28,14 @@ async function listFiles(prefix = "") {
     sortBy: { column: "created_at", order: "desc" },
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   const items: Array<{ name: string; path: string; folder: string; url: string }> = [];
 
   for (const item of data || []) {
     const itemPath = prefix ? `${prefix}/${item.name}` : item.name;
-
     const isFolder = !item.metadata;
+
     if (isFolder) {
       const nested = await listFiles(itemPath);
       items.push(...nested);
@@ -55,7 +54,7 @@ async function listFiles(prefix = "") {
   return items;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
@@ -63,8 +62,12 @@ export async function GET() {
 
   try {
     await ensureBucket();
-    const items = await listFiles("");
-    return NextResponse.json({ items });
+    const folder = new URL(request.url).searchParams.get("folder") || "all";
+    let items = await listFiles("");
+    if (folder !== "all") {
+      items = items.filter((item) => item.folder === folder);
+    }
+    return NextResponse.json({ items, folders: ALLOWED_FOLDERS });
   } catch {
     return NextResponse.json({ error: "加载媒体库失败" }, { status: 500 });
   }
@@ -81,7 +84,9 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string | null) || "general";
+    const folderInput = (formData.get("folder") as string | null) || "general";
+    const customName = ((formData.get("name") as string | null) || "").trim();
+    const folder = ALLOWED_FOLDERS.includes(folderInput) ? folderInput : "general";
 
     if (!file) {
       return NextResponse.json({ error: "请选择图片文件" }, { status: 400 });
@@ -89,25 +94,61 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const ext = file.name.split(".").pop() || "jpg";
-    const safeName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const baseName = customName
+      ? customName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_\u4e00-\u9fa5]/g, "-")
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const safeName = `${folder}/${baseName}.${ext}`;
 
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(safeName, buffer, {
-        contentType: file.type || "image/jpeg",
-        upsert: true,
-      });
+    const { error } = await supabase.storage.from(BUCKET).upload(safeName, buffer, {
+      contentType: file.type || "image/jpeg",
+      upsert: true,
+    });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(safeName);
-
-    return NextResponse.json({ success: true, url: data.publicUrl, path: safeName });
+    return NextResponse.json({ success: true, url: data.publicUrl, path: safeName, folder });
   } catch {
     return NextResponse.json({ error: "上传失败" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const oldPath = body.oldPath as string;
+    const newName = ((body.newName as string) || "").trim();
+    if (!oldPath || !newName) {
+      return NextResponse.json({ error: "缺少参数" }, { status: 400 });
+    }
+
+    const folder = oldPath.split("/")[0] || "general";
+    const ext = oldPath.split(".").pop() || "jpg";
+    const cleanName = newName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_\u4e00-\u9fa5]/g, "-");
+    const newPath = `${folder}/${cleanName}.${ext}`;
+
+    const { error: copyError } = await supabase.storage.from(BUCKET).copy(oldPath, newPath);
+    if (copyError) {
+      return NextResponse.json({ error: copyError.message }, { status: 500 });
+    }
+
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove([oldPath]);
+    if (removeError) {
+      return NextResponse.json({ error: removeError.message }, { status: 500 });
+    }
+
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(newPath);
+    return NextResponse.json({ success: true, path: newPath, url: data.publicUrl });
+  } catch {
+    return NextResponse.json({ error: "改名失败" }, { status: 500 });
   }
 }
 
