@@ -21,6 +21,40 @@ async function ensureBucket() {
   }
 }
 
+async function listFiles(prefix = "") {
+  const { data, error } = await supabase.storage.from(BUCKET).list(prefix, {
+    limit: 200,
+    sortBy: { column: "created_at", order: "desc" },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const items: Array<{ name: string; path: string; folder: string; url: string }> = [];
+
+  for (const item of data || []) {
+    const itemPath = prefix ? `${prefix}/${item.name}` : item.name;
+
+    const isFolder = !item.metadata;
+    if (isFolder) {
+      const nested = await listFiles(itemPath);
+      items.push(...nested);
+      continue;
+    }
+
+    const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(itemPath);
+    items.push({
+      name: item.name,
+      path: itemPath,
+      folder: itemPath.split("/")[0] || "",
+      url: publicData.publicUrl,
+    });
+  }
+
+  return items;
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -29,28 +63,7 @@ export async function GET() {
 
   try {
     await ensureBucket();
-    const { data, error } = await supabase.storage.from(BUCKET).list("", {
-      limit: 200,
-      sortBy: { column: "created_at", order: "desc" },
-    });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const items = (data || [])
-      .filter((item) => item.name)
-      .map((item) => {
-        const path = item.name;
-        const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        return {
-          name: item.name.split("/").pop() || item.name,
-          path,
-          folder: path.split("/")[0] || "",
-          url: publicData.publicUrl,
-        };
-      });
-
+    const items = await listFiles("");
     return NextResponse.json({ items });
   } catch {
     return NextResponse.json({ error: "加载媒体库失败" }, { status: 500 });
@@ -93,7 +106,7 @@ export async function POST(request: NextRequest) {
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(safeName);
 
     return NextResponse.json({ success: true, url: data.publicUrl, path: safeName });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "上传失败" }, { status: 500 });
   }
 }
