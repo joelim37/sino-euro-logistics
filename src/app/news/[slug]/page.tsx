@@ -6,6 +6,8 @@ import Footer from "@/components/layout/Footer";
 import { getSiteConfig } from "@/lib/data";
 import { getNewsBySlug } from "@/lib/news";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const article = await getNewsBySlug(params.slug);
   if (!article) {

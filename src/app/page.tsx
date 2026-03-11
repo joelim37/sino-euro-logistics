@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig, getServices } from "@/lib/data";
