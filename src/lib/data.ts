@@ -6,6 +6,20 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+function withImageVersion(url?: string | null, version?: string | null) {
+  if (!url) return url;
+  if (!url.includes("/storage/v1/object/public/")) return url;
+
+  try {
+    const parsed = new URL(url);
+    if (version) parsed.searchParams.set("v", version);
+    return parsed.toString();
+  } catch {
+    const separator = url.includes("?") ? "&" : "?";
+    return version ? `${url}${separator}v=${encodeURIComponent(version)}` : url;
+  }
+}
+
 export async function getSiteConfig() {
   noStore();
   const { data, error } = await supabase
@@ -38,7 +52,10 @@ export async function getServices() {
     return [];
   }
 
-  return data;
+  return (data || []).map((item) => ({
+    ...item,
+    image: withImageVersion(item.image, item.updated_at || item.created_at || null),
+  }));
 }
 
 export async function getServiceBySlug(slug: string) {
@@ -54,7 +71,10 @@ export async function getServiceBySlug(slug: string) {
     return null;
   }
 
-  return data;
+  return {
+    ...data,
+    image: withImageVersion(data.image, data.updated_at || data.created_at || null),
+  };
 }
 
 export interface Inquiry {
