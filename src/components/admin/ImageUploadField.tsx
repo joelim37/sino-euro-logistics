@@ -5,11 +5,18 @@ import Image from "next/image";
 import { Loader2, Upload, Image as ImageIcon } from "lucide-react";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 
+interface MediaItem {
+  name: string;
+  path: string;
+  url: string;
+  folder: string;
+}
+
 interface ImageUploadFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  onSelectMedia?: (item: { name: string; path: string; url: string; folder: string }) => void;
+  onSelectMedia?: (item: MediaItem) => void;
   folder?: string;
   placeholder?: string;
   hint?: string;
@@ -51,8 +58,9 @@ export default function ImageUploadField({
         throw new Error(data.error || "上传失败");
       }
 
+      const uploadedItem = { name: file.name, path: data.path, url: data.url, folder };
       onChange(data.url);
-      onSelectMedia?.({ name: file.name, path: data.path, url: data.url, folder });
+      onSelectMedia?.(uploadedItem);
     } catch (err) {
       setError(err instanceof Error ? err.message : "上传失败");
     } finally {
@@ -130,6 +138,9 @@ export default function ImageUploadField({
         open={showMediaPicker}
         folder={folder}
         title={`选择${label}`}
+        actionLabel={`设为${label}`}
+        helperText="点击下方按钮即可一键应用到当前模块"
+        selectedUrl={value}
         onClose={() => setShowMediaPicker(false)}
         onSelect={(item) => {
           onChange(item.url);

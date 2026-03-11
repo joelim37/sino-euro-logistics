@@ -115,6 +115,8 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
         open={showMediaPicker}
         folder="news"
         title="选择正文插图"
+        actionLabel="插入正文"
+        helperText="点击按钮即可把图片一键插入到正文当前位置"
         onClose={() => setShowMediaPicker(false)}
         onSelect={addImageFromMedia}
       />

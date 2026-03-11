@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Loader2, Search, X } from "lucide-react";
+import { CheckCircle2, Loader2, Search, X } from "lucide-react";
 
 interface MediaItem {
   name: string;
@@ -15,6 +15,9 @@ interface MediaPickerModalProps {
   open: boolean;
   folder?: string;
   title?: string;
+  actionLabel?: string;
+  helperText?: string;
+  selectedUrl?: string;
   onClose: () => void;
   onSelect: (item: MediaItem) => void;
 }
@@ -23,6 +26,9 @@ export default function MediaPickerModal({
   open,
   folder = "all",
   title = "从媒体库选择图片",
+  actionLabel = "应用图片",
+  helperText = "选择后会直接应用到当前模块",
+  selectedUrl,
   onClose,
   onSelect,
 }: MediaPickerModalProps) {
@@ -66,7 +72,7 @@ export default function MediaPickerModal({
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div>
             <h3 className="text-lg font-semibold text-navy">{title}</h3>
-            <p className="text-sm text-gray-500 mt-1">点击图片即可插入</p>
+            <p className="text-sm text-gray-500 mt-1">{helperText}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100">
             <X className="w-5 h-5" />
@@ -94,23 +100,39 @@ export default function MediaPickerModal({
             <div className="py-20 text-center text-gray-500">没有找到可用图片</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredItems.map((item) => (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => onSelect(item)}
-                  className="text-left group border border-gray-200 rounded-2xl overflow-hidden hover:border-gold hover:shadow-md transition-all bg-white"
-                >
-                  <div className="relative h-36 bg-gray-100">
-                    <Image src={item.url} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <div className="absolute top-2 left-2 text-[11px] px-2 py-1 rounded-full bg-black/60 text-white">{item.folder}</div>
+              {filteredItems.map((item) => {
+                const isSelected = selectedUrl === item.url;
+
+                return (
+                  <div
+                    key={item.path}
+                    className={`group border rounded-2xl overflow-hidden transition-all bg-white ${isSelected ? "border-gold ring-2 ring-gold/20" : "border-gray-200 hover:border-gold hover:shadow-md"}`}
+                  >
+                    <div className="relative h-36 bg-gray-100">
+                      <Image src={item.url} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="absolute top-2 left-2 text-[11px] px-2 py-1 rounded-full bg-black/60 text-white">{item.folder}</div>
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 text-green-600 bg-white rounded-full p-1 shadow">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 space-y-3">
+                      <div>
+                        <div className="font-medium text-sm text-navy truncate">{item.name}</div>
+                        <div className="text-xs text-gray-500 truncate mt-1">{item.path}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(item)}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isSelected ? "bg-green-50 text-green-700 border border-green-200" : "bg-navy text-white hover:bg-navy/90"}`}
+                      >
+                        {isSelected ? "当前已应用" : actionLabel}
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <div className="font-medium text-sm text-navy truncate">{item.name}</div>
-                    <div className="text-xs text-gray-500 truncate mt-1">{item.path}</div>
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
