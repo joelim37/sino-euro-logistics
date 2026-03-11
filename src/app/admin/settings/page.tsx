@@ -13,6 +13,7 @@ interface SiteSettings {
   company_address: string;
   about_content: string;
   footer_content: string;
+  home_news_count: string;
 }
 
 export default function SettingsAdminPage() {
@@ -26,6 +27,7 @@ export default function SettingsAdminPage() {
     company_address: "",
     about_content: "",
     footer_content: "",
+    home_news_count: "3",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,6 +43,7 @@ export default function SettingsAdminPage() {
     "company_address",
     "about_content",
     "footer_content",
+    "home_news_count",
   ];
 
   useEffect(() => {
@@ -62,6 +65,7 @@ export default function SettingsAdminPage() {
           company_address: data.config.company_address || "",
           about_content: data.config.about_content || "",
           footer_content: data.config.footer_content || "",
+          home_news_count: data.config.home_news_count || "3",
         });
       }
     } catch (error) {
@@ -240,6 +244,25 @@ export default function SettingsAdminPage() {
               rows={6}
               className="input-field resize-none"
               placeholder="请输入公司简介内容..."
+            />
+          </div>
+        </div>
+
+        {/* Homepage News */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">首页新闻推荐</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              首页显示新闻数量
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="12"
+              value={settings.home_news_count}
+              onChange={(e) => setSettings({ ...settings, home_news_count: e.target.value })}
+              className="input-field"
+              placeholder="3"
             />
           </div>
         </div>

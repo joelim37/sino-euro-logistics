@@ -35,6 +35,41 @@ export async function GET() {
   }
 }
 
+// POST - 新增服务
+export async function POST(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+
+    const { error } = await supabase.from("services").insert({
+      name: body.name,
+      slug: body.slug,
+      description: body.description || "",
+      content: body.content || "",
+      icon: body.icon || "train",
+      image: body.image || "",
+      transit_time: body.transit_time || "",
+      suitable_for: body.suitable_for || "",
+      sort_order: body.sort_order || 0,
+      is_active: body.is_active ?? true,
+      updated_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "服务器错误" }, { status: 500 });
+  }
+}
+
 // PUT - 更新服务
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);

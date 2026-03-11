@@ -77,6 +77,8 @@ export async function POST(request: NextRequest) {
       summary: body.summary || "",
       content: body.content || "",
       featured_image: body.featured_image || "",
+      featured_image_alt: body.featured_image_alt || "",
+      og_image: body.og_image || "",
       seo_title: body.seo_title || "",
       seo_description: body.seo_description || "",
       seo_keywords: body.seo_keywords || "",

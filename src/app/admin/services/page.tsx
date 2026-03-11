@@ -32,6 +32,20 @@ export default function ServicesAdminPage() {
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const createEmptyService = (): Service => ({
+    id: "",
+    name: "",
+    slug: "",
+    description: "",
+    content: "",
+    icon: "train",
+    image: "",
+    transit_time: "",
+    suitable_for: "",
+    sort_order: services.length + 1,
+    is_active: true,
+  });
+
   useEffect(() => {
     fetchServices();
   }, []);
@@ -54,7 +68,7 @@ export default function ServicesAdminPage() {
     setIsSaving(true);
     try {
       const response = await fetch("/api/admin/services", {
-        method: "PUT",
+        method: editingService.id ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -103,6 +117,10 @@ export default function ServicesAdminPage() {
           <h1 className="text-2xl font-serif text-navy font-bold">服务管理</h1>
           <p className="text-gray-500 mt-1">管理服务项目展示内容</p>
         </div>
+        <button onClick={() => setEditingService(createEmptyService())} className="btn-primary flex items-center gap-2">
+          <Plus className="w-4 h-4" />
+          新增服务
+        </button>
       </div>
 
       {/* Services List */}

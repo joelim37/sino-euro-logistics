@@ -12,6 +12,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: "新闻不存在" };
   }
 
+  const shareImage = article.og_image || article.featured_image || undefined;
+
   return {
     title: article.seo_title || article.title,
     description: article.seo_description || article.summary || "",
@@ -19,7 +21,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       title: article.seo_title || article.title,
       description: article.seo_description || article.summary || "",
-      images: article.featured_image ? [article.featured_image] : [],
+      images: shareImage ? [shareImage] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.seo_title || article.title,
+      description: article.seo_description || article.summary || "",
+      images: shareImage ? [shareImage] : undefined,
     },
   };
 }
@@ -48,13 +56,11 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {article.featured_image && (
             <div className="relative h-80 md:h-[420px] rounded-2xl overflow-hidden mb-10">
-              <Image src={article.featured_image} alt={article.title} fill className="object-cover" />
+              <Image src={article.featured_image} alt={article.featured_image_alt || article.title} fill className="object-cover" />
             </div>
           )}
 
-          <div className="prose prose-lg max-w-none text-gray-700 whitespace-pre-wrap leading-8">
-            {article.content}
-          </div>
+          <div className="prose prose-lg max-w-none text-gray-700 leading-8" dangerouslySetInnerHTML={{ __html: article.content || "" }} />
         </div>
       </article>
 

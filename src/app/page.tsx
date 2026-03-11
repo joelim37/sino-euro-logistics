@@ -41,7 +41,8 @@ const advantages = [
 export default async function HomePage() {
   const config = await getSiteConfig();
   const services = await getServices();
-  const news = await getPublishedNews(3);
+  const homeNewsCount = Number(config.home_news_count || 3);
+  const news = await getPublishedNews(homeNewsCount);
 
   return (
     <main className="min-h-screen">

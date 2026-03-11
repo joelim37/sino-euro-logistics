@@ -12,6 +12,8 @@ export interface NewsItem {
   summary: string | null;
   content: string | null;
   featured_image: string | null;
+  featured_image_alt: string | null;
+  og_image: string | null;
   seo_title: string | null;
   seo_description: string | null;
   seo_keywords: string | null;

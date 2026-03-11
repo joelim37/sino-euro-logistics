@@ -21,6 +21,42 @@ async function ensureBucket() {
   }
 }
 
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
+  try {
+    await ensureBucket();
+    const { data, error } = await supabase.storage.from(BUCKET).list("", {
+      limit: 200,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const items = (data || [])
+      .filter((item) => item.name)
+      .map((item) => {
+        const path = item.name;
+        const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+        return {
+          name: item.name.split("/").pop() || item.name,
+          path,
+          folder: path.split("/")[0] || "",
+          url: publicData.publicUrl,
+        };
+      });
+
+    return NextResponse.json({ items });
+  } catch {
+    return NextResponse.json({ error: "加载媒体库失败" }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -60,4 +96,24 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({ error: "上传失败" }, { status: 500 });
   }
+}
+
+export async function DELETE(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const path = searchParams.get("path");
+  if (!path) {
+    return NextResponse.json({ error: "缺少文件路径" }, { status: 400 });
+  }
+
+  const { error } = await supabase.storage.from(BUCKET).remove([path]);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Edit2, Loader2, Plus, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 interface NewsItem {
   id?: string;
@@ -11,6 +12,8 @@ interface NewsItem {
   summary: string;
   content: string;
   featured_image: string;
+  featured_image_alt: string;
+  og_image: string;
   seo_title: string;
   seo_description: string;
   seo_keywords: string;
@@ -24,6 +27,8 @@ const emptyForm: NewsItem = {
   summary: "",
   content: "",
   featured_image: "",
+  featured_image_alt: "",
+  og_image: "",
   seo_title: "",
   seo_description: "",
   seo_keywords: "",
@@ -160,10 +165,12 @@ export default function NewsAdminPage() {
             <textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} rows={3} className="input-field resize-none" placeholder="用于列表页和 SEO 描述的简要摘要" />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">正文</label>
-            <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={10} className="input-field resize-none" placeholder="请输入新闻正文内容" />
-          </div>
+          <RichTextEditor
+            label="正文"
+            value={form.content}
+            onChange={(value) => setForm({ ...form, content: value })}
+            hint="支持标题、段落、加粗、列表、链接等基础富文本"
+          />
 
           <ImageUploadField
             label="封面图片"
@@ -172,6 +179,20 @@ export default function NewsAdminPage() {
             folder="news"
             hint="支持直接上传电脑本地图片到 Supabase Storage"
           />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">封面图片 Alt</label>
+              <input value={form.featured_image_alt} onChange={(e) => setForm({ ...form, featured_image_alt: e.target.value })} className="input-field" placeholder="例如：中欧班列货运现场照片" />
+            </div>
+            <ImageUploadField
+              label="OG 分享图（可选）"
+              value={form.og_image}
+              onChange={(value) => setForm({ ...form, og_image: value })}
+              folder="news-og"
+              hint="为空则默认使用封面图"
+            />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
