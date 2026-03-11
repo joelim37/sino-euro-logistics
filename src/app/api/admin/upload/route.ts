@@ -51,11 +51,12 @@ async function listFiles(prefix = "") {
     }
 
     const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(itemPath);
+    const version = item.updated_at || item.created_at || item.last_accessed_at || Date.now();
     items.push({
       name: item.name,
       path: itemPath,
       folder: itemPath.split("/")[0] || "",
-      url: publicData.publicUrl,
+      url: `${publicData.publicUrl}?v=${encodeURIComponent(String(version))}`,
     });
   }
 
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(safeName);
-    return NextResponse.json({ success: true, url: data.publicUrl, path: safeName, folder });
+    return NextResponse.json({ success: true, url: `${data.publicUrl}?v=${Date.now()}`, path: safeName, folder });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "上传失败" }, { status: 500 });
   }
@@ -156,7 +157,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(newPath);
-    return NextResponse.json({ success: true, path: newPath, url: data.publicUrl });
+    return NextResponse.json({ success: true, path: newPath, url: `${data.publicUrl}?v=${Date.now()}` });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "改名失败" }, { status: 500 });
   }
