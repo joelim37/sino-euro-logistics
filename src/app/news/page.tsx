@@ -5,6 +5,8 @@ import Footer from "@/components/layout/Footer";
 import { getSiteConfig } from "@/lib/data";
 import { getPublishedNews } from "@/lib/news";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewsPage() {
   const config = await getSiteConfig();
   const news = await getPublishedNews();
