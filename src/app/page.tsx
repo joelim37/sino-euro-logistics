@@ -4,6 +4,7 @@ import { Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp } from 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig, getServices } from "@/lib/data";
+import { getPublishedNews } from "@/lib/news";
 
 // 服务图标映射
 const iconMap: Record<string, React.ElementType> = {
@@ -40,6 +41,7 @@ const advantages = [
 export default async function HomePage() {
   const config = await getSiteConfig();
   const services = await getServices();
+  const news = await getPublishedNews(3);
 
   return (
     <main className="min-h-screen">
@@ -146,6 +148,54 @@ export default async function HomePage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* News Section */}
+      <section className="py-20 bg-bg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-12 gap-4">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-serif text-navy font-bold mb-4">
+                新闻动态
+              </h2>
+              <p className="text-gray-600 max-w-2xl">
+                关注最新中欧物流趋势、市场动态与清关运输资讯
+              </p>
+            </div>
+            <Link href="/news" className="text-gold font-medium hover:underline">
+              查看更多
+            </Link>
+          </div>
+
+          {news.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm p-10 text-center text-gray-500">
+              暂无新闻内容
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {news.map((item) => (
+                <Link key={item.id} href={`/news/${item.slug}`} className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative h-56 bg-gray-100">
+                    {item.featured_image ? (
+                      <Image src={item.featured_image} alt={item.title} fill className="object-cover" />
+                    ) : null}
+                  </div>
+                  <div className="p-6">
+                    <p className="text-sm text-gold mb-3">
+                      {item.published_at ? new Date(item.published_at).toLocaleDateString("zh-CN") : "未发布"}
+                    </p>
+                    <h3 className="text-xl font-serif text-navy font-bold mb-3 line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-600 line-clamp-3">
+                      {item.summary || "点击查看详情"}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

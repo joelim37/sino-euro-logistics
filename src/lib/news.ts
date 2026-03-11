@@ -21,13 +21,19 @@ export interface NewsItem {
   updated_at: string;
 }
 
-export async function getPublishedNews() {
-  const { data, error } = await supabase
+export async function getPublishedNews(limit?: number) {
+  let query = supabase
     .from("news")
     .select("*")
     .eq("status", "published")
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching news:", error);
