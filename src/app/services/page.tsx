@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Train, Truck, Ship, FileCheck, ArrowLeft } from "lucide-react";
+import { Train, Truck, Ship, FileCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 import Navbar from "@/components/layout/Navbar";

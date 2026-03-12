@@ -16,6 +16,19 @@ interface SiteSettings {
   home_news_count: string;
 }
 
+const SETTINGS_KEYS = [
+  "company_name",
+  "company_name_en",
+  "company_phone",
+  "company_email",
+  "company_wechat",
+  "company_whatsapp",
+  "company_address",
+  "about_content",
+  "footer_content",
+  "home_news_count",
+] as const;
+
 export default function SettingsAdminPage() {
   const [settings, setSettings] = useState<SiteSettings>({
     company_name: "",
@@ -33,47 +46,34 @@ export default function SettingsAdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const keys = [
-    "company_name",
-    "company_name_en",
-    "company_phone",
-    "company_email",
-    "company_wechat",
-    "company_whatsapp",
-    "company_address",
-    "about_content",
-    "footer_content",
-    "home_news_count",
-  ];
-
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch(`/api/admin/config?keys=${SETTINGS_KEYS.join(",")}`);
+        const data = await response.json();
+        if (data.config) {
+          setSettings({
+            company_name: data.config.company_name || "",
+            company_name_en: data.config.company_name_en || "",
+            company_phone: data.config.company_phone || "",
+            company_email: data.config.company_email || "",
+            company_wechat: data.config.company_wechat || "",
+            company_whatsapp: data.config.company_whatsapp || "",
+            company_address: data.config.company_address || "",
+            about_content: data.config.about_content || "",
+            footer_content: data.config.footer_content || "",
+            home_news_count: data.config.home_news_count || "3",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchSettings();
   }, []);
-
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch(`/api/admin/config?keys=${keys.join(",")}`);
-      const data = await response.json();
-      if (data.config) {
-        setSettings({
-          company_name: data.config.company_name || "",
-          company_name_en: data.config.company_name_en || "",
-          company_phone: data.config.company_phone || "",
-          company_email: data.config.company_email || "",
-          company_wechat: data.config.company_wechat || "",
-          company_whatsapp: data.config.company_whatsapp || "",
-          company_address: data.config.company_address || "",
-          about_content: data.config.about_content || "",
-          footer_content: data.config.footer_content || "",
-          home_news_count: data.config.home_news_count || "3",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     setIsSaving(true);

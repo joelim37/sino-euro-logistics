@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp } from "lucide-react";
+import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 import Navbar from "@/components/layout/Navbar";
@@ -45,6 +45,8 @@ export default async function HomePage() {
   const services = await getServices();
   const homeNewsCount = Number(config.home_news_count || 3);
   const news = await getPublishedNews(homeNewsCount);
+  const featuredNews = news[0];
+  const secondaryNews = news.slice(1, Math.max(homeNewsCount, 3));
 
   return (
     <main className="min-h-screen">
@@ -176,27 +178,73 @@ export default async function HomePage() {
               暂无新闻内容
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {news.map((item) => (
-                <Link key={item.id} href={`/news/${item.slug}`} className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative h-56 bg-gray-100">
-                    {item.featured_image ? (
-                      <Image src={item.featured_image} alt={item.title} fill className="object-cover" />
-                    ) : null}
-                  </div>
-                  <div className="p-6">
-                    <p className="text-sm text-gold mb-3">
-                      {item.published_at ? new Date(item.published_at).toLocaleDateString("zh-CN") : "未发布"}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
+              {featuredNews && (
+                <Link
+                  href={`/news/${featuredNews.slug}`}
+                  className="lg:col-span-3 group relative min-h-[420px] rounded-[28px] overflow-hidden bg-navy shadow-lg"
+                >
+                  {featuredNews.featured_image ? (
+                    <Image src={featuredNews.featured_image} alt={featuredNews.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                  ) : null}
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/65 to-navy/10" />
+                  <div className="absolute inset-x-0 bottom-0 p-8 md:p-10 text-white">
+                    <div className="inline-flex items-center rounded-full bg-gold/20 text-gold px-3 py-1 text-xs font-medium mb-4">
+                      推荐文章
+                    </div>
+                    <p className="text-sm text-gold/90 mb-3">
+                      {featuredNews.published_at ? new Date(featuredNews.published_at).toLocaleDateString("zh-CN") : "未发布"}
                     </p>
-                    <h3 className="text-xl font-serif text-navy font-bold mb-3 line-clamp-2">
-                      {item.title}
+                    <h3 className="text-2xl md:text-3xl font-serif font-bold mb-4 max-w-3xl leading-snug">
+                      {featuredNews.title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-3">
-                      {item.summary || "点击查看详情"}
+                    <p className="text-gray-200 max-w-2xl line-clamp-3 mb-6">
+                      {featuredNews.summary || "点击查看详情"}
                     </p>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-white group-hover:text-gold transition-colors">
+                      查看详情
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </span>
                   </div>
                 </Link>
-              ))}
+              )}
+
+              <div className="lg:col-span-2 flex flex-col gap-5">
+                {secondaryNews.length > 0 ? secondaryNews.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/news/${item.slug}`}
+                    className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all border border-gray-100 overflow-hidden"
+                  >
+                    <div className="flex flex-col sm:flex-row h-full">
+                      <div className="relative sm:w-44 h-44 sm:h-auto bg-gray-100 shrink-0 overflow-hidden">
+                        {item.featured_image ? (
+                          <Image src={item.featured_image} alt={item.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                        ) : null}
+                      </div>
+                      <div className="p-5 flex-1">
+                        <p className="text-xs text-gold mb-2">
+                          {item.published_at ? new Date(item.published_at).toLocaleDateString("zh-CN") : "未发布"}
+                        </p>
+                        <h3 className="text-lg font-serif text-navy font-bold mb-2 line-clamp-2">
+                          {item.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                          {item.summary || "点击查看详情"}
+                        </p>
+                        <span className="inline-flex items-center gap-2 text-sm font-medium text-navy group-hover:text-gold transition-colors">
+                          继续阅读
+                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                )) : (
+                  <div className="bg-white rounded-2xl shadow-sm p-8 text-gray-500 border border-gray-100 h-full flex items-center justify-center text-center">
+                    当前只有 1 篇已发布新闻，发布更多文章后这里会自动补齐推荐位。
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

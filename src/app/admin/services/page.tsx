@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Save, Trash2, Plus, Loader2, Edit2, X } from "lucide-react";
+import { Trash2, Plus, Loader2, Edit2, X } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 
 interface Service {

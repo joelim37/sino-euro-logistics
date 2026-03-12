@@ -34,7 +34,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ inquiries: data });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "服务器错误" },
       { status: 500 }
@@ -65,7 +65,7 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "服务器错误" },
       { status: 500 }

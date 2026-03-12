@@ -24,23 +24,23 @@ export default function MediaAdminPage() {
   const [search, setSearch] = useState("");
   const [highlightedPath, setHighlightedPath] = useState("");
 
-  const fetchMedia = async (nextFolder = folder) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/admin/upload?folder=${encodeURIComponent(nextFolder)}`);
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "加载失败");
-      setItems(data.items || []);
-      setError("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "加载失败");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchMedia(folder);
+    const fetchMedia = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/admin/upload?folder=${encodeURIComponent(folder)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "加载失败");
+        setItems(data.items || []);
+        setError("");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "加载失败");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMedia();
   }, [folder]);
 
   const upload = async (file?: File) => {
@@ -57,7 +57,10 @@ export default function MediaAdminPage() {
       setFolder(uploadFolder);
       setNewName("");
       setHighlightedPath(data.path || "");
-      await fetchMedia(uploadFolder);
+      const refreshResponse = await fetch(`/api/admin/upload?folder=${encodeURIComponent(uploadFolder)}`);
+      const refreshed = await refreshResponse.json();
+      if (!refreshResponse.ok) throw new Error(refreshed.error || "加载失败");
+      setItems(refreshed.items || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "上传失败");
     } finally {
@@ -73,7 +76,8 @@ export default function MediaAdminPage() {
       setError(data.error || "删除失败");
       return;
     }
-    await fetchMedia(folder);
+
+    setItems((prev) => prev.filter((item) => item.path !== path));
   };
 
   const rename = async (item: MediaItem) => {
@@ -91,7 +95,13 @@ export default function MediaAdminPage() {
       return;
     }
     setHighlightedPath(data.path || "");
-    await fetchMedia(folder);
+    setItems((prev) => prev.map((current) => current.path === item.path ? {
+      ...current,
+      name: data.name || current.name,
+      path: data.path || current.path,
+      url: data.url || current.url,
+      folder: data.folder || current.folder,
+    } : current));
   };
 
   const copy = async (text: string) => {
@@ -132,7 +142,7 @@ export default function MediaAdminPage() {
             {isUploading ? "上传中..." : "上传图片"}
             <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
           </label>
-          <button onClick={() => fetchMedia(folder)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 inline-flex items-center gap-2 justify-center">
+          <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 inline-flex items-center gap-2 justify-center">
             <RefreshCw className="w-4 h-4" /> 刷新
           </button>
         </div>

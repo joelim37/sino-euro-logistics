@@ -4,7 +4,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import {
-  LayoutDashboard,
   Image,
   Package,
   MessageSquare,
@@ -12,7 +11,6 @@ import {
   LogOut,
   Menu,
   X,
-  Truck,
 } from "lucide-react";
 import { useState } from "react";
 
