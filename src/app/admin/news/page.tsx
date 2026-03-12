@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Edit2, ExternalLink, Loader2, Plus, Search, Star, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import Toast from "@/components/admin/Toast";
@@ -22,6 +22,7 @@ interface NewsItem {
   published_at?: string | null;
   created_at?: string;
   updated_at?: string;
+  is_top?: boolean;
 }
 
 const emptyForm: NewsItem = {
@@ -76,6 +77,7 @@ export default function NewsAdminPage() {
   });
   const [autosaveState, setAutosaveState] = useState<"idle" | "typing" | "local-saved" | "saving" | "saved" | "error">("idle");
   const [linkOgToFeatured, setLinkOgToFeatured] = useState(true);
+  const [isSavingTop, setIsSavingTop] = useState(false);
   const previewWindowRef = useRef<Window | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -385,6 +387,31 @@ export default function NewsAdminPage() {
     }
   };
 
+  const handleToggleTop = async (item: NewsItem) => {
+    if (!item.id) return;
+    setIsSavingTop(true);
+    try {
+      const currentTopIds = news.filter((entry) => entry.is_top && entry.id).map((entry) => entry.id as string);
+      const nextTopIds = item.is_top ? currentTopIds.filter((id) => id !== item.id) : [item.id, ...currentTopIds.filter((id) => id !== item.id)].slice(0, 3);
+
+      const response = await fetch("/api/admin/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ home_news_top_ids: nextTopIds.join(",") }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "置顶保存失败");
+
+      await fetchNews();
+      showToast(item.is_top ? "已取消置顶" : "已设为首页推荐置顶");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "置顶保存失败", "error");
+    } finally {
+      setIsSavingTop(false);
+    }
+  };
+
   return (
     <>
       <div className="space-y-8">
@@ -451,11 +478,22 @@ export default function NewsAdminPage() {
                     <div key={item.id} className="border rounded-xl p-4 hover:border-gold transition-colors">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="font-semibold text-navy truncate">{item.title}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-navy truncate">{item.title}</h3>
+                            {item.is_top && <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200"><Star className="w-3 h-3 fill-current" />置顶</span>}
+                          </div>
                           <p className="text-sm text-gray-500 truncate">/{item.slug}</p>
-                          <p className="text-xs mt-2 inline-flex px-2 py-1 rounded bg-gray-100 text-gray-600">{item.status === "published" ? "已发布" : "草稿"}</p>
+                          <p className={`text-xs mt-2 inline-flex px-2 py-1 rounded ${item.status === "published" ? "bg-green-50 text-green-700 border border-green-200" : "bg-gray-100 text-gray-600 border border-gray-200"}`}>{item.status === "published" ? "已发布" : "草稿"}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {item.status === "published" && (
+                            <button
+                              onClick={() => handleToggleTop(item)}
+                              disabled={isSavingTop}
+                              className={`p-2 rounded-lg ${item.is_top ? "bg-amber-50 hover:bg-amber-100" : "hover:bg-gray-100"} disabled:opacity-60`}
+                              title={item.is_top ? "取消置顶" : "设为首页置顶"}
+                            ><Star className={`w-4 h-4 ${item.is_top ? "text-amber-600 fill-current" : "text-navy"}`} /></button>
+                          )}
                           {item.status === "published" && (
                             <button onClick={() => handleCopyPublishedUrl(item.slug)} className="p-2 rounded-lg hover:bg-gray-100" title="复制正式链接"><Copy className="w-4 h-4 text-navy" /></button>
                           )}
@@ -574,12 +612,26 @@ export default function NewsAdminPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">发布状态</label>
-                <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as "draft" | "published" })} className="input-field">
-                  <option value="draft">草稿</option>
-                  <option value="published">已发布</option>
-                </select>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">发布状态</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, status: "draft" })}
+                    className={`rounded-xl border px-4 py-3 text-left transition-all ${form.status === "draft" ? "border-gray-400 bg-gray-50 ring-2 ring-gray-200" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+                  >
+                    <div className="text-sm font-medium text-gray-800">草稿</div>
+                    <div className="text-xs text-gray-500 mt-1">仅后台可见，适合继续编辑</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, status: "published", published_at: form.published_at || new Date().toISOString() })}
+                    className={`rounded-xl border px-4 py-3 text-left transition-all ${form.status === "published" ? "border-green-400 bg-green-50 ring-2 ring-green-100" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+                  >
+                    <div className="text-sm font-medium text-gray-800">已发布</div>
+                    <div className="text-xs text-gray-500 mt-1">前台可见，会进入新闻列表/首页推荐</div>
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">发布时间（可选）</label>

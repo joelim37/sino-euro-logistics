@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
     revalidatePath("/about");
     revalidatePath("/services");
     revalidatePath("/contact");
+    revalidatePath("/news");
 
     return NextResponse.json({ success: true });
   } catch (error) {

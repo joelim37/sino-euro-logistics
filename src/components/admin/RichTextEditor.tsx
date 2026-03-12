@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading1, Heading2, Pilcrow, Image as ImageIcon, Check } from "lucide-react";
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading1, Heading2, Pilcrow, Image as ImageIcon, Check, Pencil, Trash2 } from "lucide-react";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 
 interface RichTextEditorProps {
@@ -27,6 +27,7 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [pendingImage, setPendingImage] = useState<{ url: string; name: string } | null>(null);
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
   const [imageAlt, setImageAlt] = useState("");
   const [imageStyle, setImageStyle] = useState<ImageStyle>("center");
 
@@ -79,6 +80,30 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
     setShowMediaPicker(false);
   };
 
+  const getImageStyleFromElement = (img: HTMLImageElement): ImageStyle => {
+    const style = img.getAttribute("style") || "";
+    if (style.includes("width:100%")) return "wide";
+    if (style.includes("float:left")) return "left";
+    if (style.includes("float:right")) return "right";
+    return "center";
+  };
+
+  const applyImageElementStyle = (img: HTMLImageElement, style: ImageStyle) => {
+    if (style === "wide") {
+      img.style.cssText = "width:100%;height:auto;border-radius:16px;display:block;";
+      return;
+    }
+    if (style === "left") {
+      img.style.cssText = "width:42%;max-width:320px;height:auto;border-radius:12px;float:left;margin:8px 20px 12px 0;";
+      return;
+    }
+    if (style === "right") {
+      img.style.cssText = "width:42%;max-width:320px;height:auto;border-radius:12px;float:right;margin:8px 0 12px 20px;";
+      return;
+    }
+    img.style.cssText = "max-width:100%;height:auto;border-radius:12px;margin:16px auto;display:block;";
+  };
+
   const confirmInsertImage = () => {
     if (!editorRef.current || !pendingImage) return;
     editorRef.current.focus();
@@ -90,6 +115,47 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
     setImageAlt("");
     setImageStyle("center");
   };
+
+  const updateSelectedImage = () => {
+    if (!selectedImage) return;
+    selectedImage.alt = imageAlt;
+    applyImageElementStyle(selectedImage, imageStyle);
+    syncValue();
+    setSelectedImage(null);
+    setImageAlt("");
+    setImageStyle("center");
+  };
+
+  const removeSelectedImage = () => {
+    if (!selectedImage) return;
+    const parent = selectedImage.parentElement;
+    if (parent?.tagName === "FIGURE") {
+      parent.remove();
+    } else {
+      selectedImage.remove();
+    }
+    syncValue();
+    setSelectedImage(null);
+    setImageAlt("");
+    setImageStyle("center");
+  };
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const editor = editorRef.current;
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLImageElement)) return;
+      if (!editor.contains(target)) return;
+      setSelectedImage(target);
+      setImageAlt(target.alt || "");
+      setImageStyle(getImageStyleFromElement(target));
+    };
+
+    editor.addEventListener("click", handleClick);
+    return () => editor.removeEventListener("click", handleClick);
+  }, [value]);
 
   return (
     <>
@@ -124,6 +190,7 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
           />
         </div>
         {hint && <p className="text-sm text-gray-500 mt-2">{hint}</p>}
+        <p className="text-xs text-gray-400 mt-2">小提示：点击正文中的图片，可二次修改样式、alt 文本或直接删除。</p>
       </div>
 
       <MediaPickerModal
@@ -135,6 +202,78 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
         onClose={() => setShowMediaPicker(false)}
         onSelect={beginInsertImageFromMedia}
       />
+
+      {selectedImage && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-navy">编辑正文图片</h3>
+                <p className="text-sm text-gray-500 mt-1">可以修改图片说明、展示样式，或直接删除这张图</p>
+              </div>
+              <button type="button" onClick={() => setSelectedImage(null)} className="px-3 py-2 rounded-lg hover:bg-gray-100 text-sm text-gray-600">
+                关闭
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">图片 Alt 文本</label>
+                  <input value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} className="input-field" placeholder="例如：欧洲仓储配送现场" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">展示样式</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {imageStyleOptions.map((option) => {
+                      const selected = imageStyle === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setImageStyle(option.value)}
+                          className={`rounded-xl border p-3 text-left transition-all ${selected ? "border-navy ring-2 ring-navy/10 bg-navy/[0.03]" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-gray-800">{option.label}</span>
+                            {selected && <Check className="w-4 h-4 text-navy" />}
+                          </div>
+                          <div className={`h-20 rounded-lg bg-gray-100 p-3 flex ${option.frameClass}`}>
+                            <div className={`h-full rounded-md bg-gradient-to-br from-navy/80 to-gold/80 ${option.previewClass}`} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-3">当前图片</div>
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 min-h-[320px] flex items-center justify-center">
+                  <Image src={selectedImage.src} alt={imageAlt || selectedImage.alt || "正文图片"} width={1200} height={800} className={`h-auto rounded-xl ${imageStyle === "wide" ? "w-full" : imageStyle === "center" ? "w-3/4 mx-auto" : imageStyle === "left" ? "w-1/2 mr-auto" : "w-1/2 ml-auto"}`} />
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t flex items-center justify-between gap-3 bg-gray-50">
+              <button type="button" onClick={removeSelectedImage} className="px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 inline-flex items-center gap-2">
+                <Trash2 className="w-4 h-4" />
+                删除图片
+              </button>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setSelectedImage(null)} className="px-4 py-2 rounded-lg hover:bg-gray-200 text-gray-600">
+                  取消
+                </button>
+                <button type="button" onClick={updateSelectedImage} className="btn-primary inline-flex items-center gap-2">
+                  <Pencil className="w-4 h-4" />
+                  应用修改
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pendingImage && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">

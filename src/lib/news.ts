@@ -28,30 +28,60 @@ export interface NewsItem {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  is_top?: boolean;
 }
 
 export async function getPublishedNews(limit?: number) {
   noStore();
 
-  let query = getSupabase()
-    .from("news")
-    .select("*")
-    .eq("status", "published")
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
-
-  if (limit) {
-    query = query.limit(limit);
-  }
-
-  const { data, error } = await query;
+  const supabase = getSupabase();
+  const [{ data, error }, { data: configRows, error: configError }] = await Promise.all([
+    (limit
+      ? supabase
+          .from("news")
+          .select("*")
+          .eq("status", "published")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })
+          .limit(limit)
+      : supabase
+          .from("news")
+          .select("*")
+          .eq("status", "published")
+          .order("published_at", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })),
+    supabase.from("site_config").select("key, value").eq("key", "home_news_top_ids"),
+  ]);
 
   if (error) {
     console.error("Error fetching news:", error);
     return [] as NewsItem[];
   }
 
-  return (data || []) as NewsItem[];
+  if (configError) {
+    console.error("Error fetching top news config:", configError);
+  }
+
+  const topIds = (configRows?.[0]?.value || "")
+    .split(",")
+    .map((item: string) => item.trim())
+    .filter(Boolean);
+
+  const topSet = new Set(topIds);
+  const ordered = [...(data || [])].sort((a, b) => {
+    const aTop = topSet.has(a.id) ? topIds.indexOf(a.id) : Number.POSITIVE_INFINITY;
+    const bTop = topSet.has(b.id) ? topIds.indexOf(b.id) : Number.POSITIVE_INFINITY;
+    if (aTop !== bTop) return aTop - bTop;
+
+    const aTime = new Date(a.published_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.published_at || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+
+  return ordered.map((item) => ({
+    ...(item as NewsItem),
+    is_top: topSet.has(item.id),
+  }));
 }
 
 export async function getNewsBySlug(slug: string) {
