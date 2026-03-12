@@ -67,6 +67,9 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
       </article>
 
       <Footer
+        companyName={config.company_name}
+        companyNameEn={config.company_name_en}
+        description={config.footer_content}
         phone={config.company_phone}
         email={config.company_email}
         wechat={config.company_wechat}

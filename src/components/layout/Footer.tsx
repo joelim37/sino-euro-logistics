@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 
 interface FooterProps {
+  companyName?: string;
+  companyNameEn?: string;
+  description?: string;
   phone?: string;
   email?: string;
   wechat?: string;
@@ -9,6 +12,9 @@ interface FooterProps {
 }
 
 export default function Footer({
+  companyName = "中欧通联国际物流",
+  companyNameEn = "Sino Euro Logistics",
+  description = "专注中欧物流14年，提供中欧班列、卡航快递、海运整拼柜、欧盟清关派送到门一站式服务。",
   phone = "+86 400-888-8888",
   email = "info@sinoeuro.com",
   wechat = "SinoEuroLogistics",
@@ -26,13 +32,13 @@ export default function Footer({
               </div>
               <div>
                 <h2 className="font-serif text-xl font-bold">
-                  中欧通联国际物流
+                  {companyName}
                 </h2>
-                <p className="text-gray-400 text-sm">Sino Euro Logistics</p>
+                <p className="text-gray-400 text-sm">{companyNameEn}</p>
               </div>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
-              专注中欧物流14年，提供中欧班列、卡航快递、海运整拼柜、欧盟清关派送到门一站式服务。
+              {description}
             </p>
           </div>
 
