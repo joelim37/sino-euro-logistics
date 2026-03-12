@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
@@ -96,13 +96,13 @@ export default function NewsAdminPage() {
   const seoTitleLength = form.seo_title.trim().length;
   const seoDescriptionLength = form.seo_description.trim().length;
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = useCallback((message: string, type: "success" | "error" = "success") => {
     setToast({ open: true, message, type });
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => {
       setToast((prev) => ({ ...prev, open: false }));
     }, 2600);
-  };
+  }, []);
 
   const filteredNews = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -143,7 +143,7 @@ export default function NewsAdminPage() {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  const fetchNews = async () => {
+  const fetchNews = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/news");
       const data = await response.json();
@@ -157,7 +157,7 @@ export default function NewsAdminPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
     fetchNews();
@@ -184,7 +184,7 @@ export default function NewsAdminPage() {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
       if (dbAutosaveTimerRef.current) clearTimeout(dbAutosaveTimerRef.current);
     };
-  }, []);
+  }, [fetchNews, showToast]);
 
   useEffect(() => {
     if (!hasLoadedDraftRef.current) return;
@@ -211,9 +211,15 @@ export default function NewsAdminPage() {
     }, 800);
   }, [form, slugTouched]);
 
+  const autosavePayload = useMemo(() => ({
+    ...form,
+    status: form.id ? form.status : "draft",
+    published_at: form.id ? form.published_at : null,
+  }), [form]);
+
   useEffect(() => {
     if (!hasLoadedDraftRef.current) return;
-    if (!form.title.trim() || !form.slug.trim()) return;
+    if (!autosavePayload.title.trim() || !autosavePayload.slug.trim()) return;
     if (isSaving) return;
 
     if (dbAutosaveTimerRef.current) clearTimeout(dbAutosaveTimerRef.current);
@@ -221,12 +227,6 @@ export default function NewsAdminPage() {
 
     dbAutosaveTimerRef.current = setTimeout(async () => {
       try {
-        const autosavePayload = {
-          ...form,
-          status: form.id ? form.status : "draft",
-          published_at: form.id ? form.published_at : null,
-        };
-
         const response = await fetch("/api/admin/news", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -250,7 +250,7 @@ export default function NewsAdminPage() {
         setAutosaveState("error");
       }
     }, 2500);
-  }, [form.title, form.slug, form.summary, form.content, form.featured_image, form.featured_image_alt, form.og_image, form.seo_title, form.seo_description, form.seo_keywords]);
+  }, [autosavePayload, isSaving]);
 
   const resetForm = () => {
     setForm(emptyForm);
