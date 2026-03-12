@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "中欧物流一站式解决方案",
+  description: "中欧通联提供中欧班列、卡航快递、海运整拼柜、欧盟清关与派送到门服务，覆盖欧洲多国，适合跨境卖家与外贸企业。",
+  alternates: { canonical: "/" },
+};
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig, getServices } from "@/lib/data";
@@ -40,6 +47,25 @@ const advantages = [
   },
 ];
 
+const faqs = [
+  {
+    question: "中欧班列和卡航快递分别适合什么货物？",
+    answer: "中欧班列适合时效与成本需要平衡的常规跨境货物，卡航快递更适合时效要求更高、希望门到门交付更灵活的货物。",
+  },
+  {
+    question: "中欧物流通常需要多久到欧洲？",
+    answer: "具体时效取决于运输方式、目的国、清关资料完整性和尾程预约情况。铁路和卡航通常比海运更快，实际方案可根据货物类型评估。",
+  },
+  {
+    question: "可以提供欧盟清关和派送到门吗？",
+    answer: "可以。中欧通联可提供中欧主程运输、欧盟清关以及欧洲尾程派送到门的一体化服务。",
+  },
+  {
+    question: "发货前需要准备哪些资料？",
+    answer: "通常需要商业发票、装箱单、品名申报信息、收发货人资料以及目标国清关所需的其他合规文件。高峰期建议提前预审。",
+  },
+];
+
 export default async function HomePage() {
   const config = await getSiteConfig();
   const services = await getServices();
@@ -67,9 +93,23 @@ export default async function HomePage() {
       : undefined,
   };
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <Navbar />
 
       {/* Hero Banner */}
@@ -267,6 +307,24 @@ export default async function HomePage() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-serif text-navy font-bold mb-4">常见问题</h2>
+            <p className="text-gray-600">把中欧物流客户最常问的几个问题先说清楚。</p>
+          </div>
+          <div className="space-y-4">
+            {faqs.map((faq) => (
+              <div key={faq.question} className="bg-bg border border-gray-100 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-navy mb-3">{faq.question}</h3>
+                <p className="text-gray-600 leading-7">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

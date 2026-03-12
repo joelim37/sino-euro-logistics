@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -6,11 +7,34 @@ import { getSiteConfig } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
+export const metadata: Metadata = {
+  title: "联系我们",
+  description: "联系中欧通联国际物流，获取中欧班列、卡航快递、海运整拼柜、欧盟清关与尾程派送方案报价。",
+  alternates: { canonical: "/contact" },
+};
+
 export default async function ContactPage() {
   const config = await getSiteConfig();
 
+  const contactJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: "联系我们",
+    url: "https://sinoeurologistics-atpr.vercel.app/contact",
+    mainEntity: {
+      "@type": "Organization",
+      name: config.company_name || "中欧通联国际物流有限公司",
+      email: config.company_email || undefined,
+      telephone: config.company_phone || undefined,
+      address: config.company_address
+        ? { "@type": "PostalAddress", streetAddress: config.company_address, addressCountry: "CN" }
+        : undefined,
+    },
+  };
+
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }} />
       <Navbar />
 
       <section className="relative pt-24 pb-16 bg-navy">

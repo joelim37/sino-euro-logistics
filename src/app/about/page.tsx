@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { Award, Users, Globe, TrendingUp } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "关于我们",
+  description: "了解中欧通联国际物流的发展历程、服务网络、行业经验与核心价值，查看我们的中欧物流一站式服务能力。",
+  alternates: { canonical: "/about" },
+};
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig } from "@/lib/data";

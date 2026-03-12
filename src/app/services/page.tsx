@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Train, Truck, Ship, FileCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "服务项目",
+  description: "查看中欧通联的中欧班列、卡航快递、海运整拼柜、欧盟清关等服务项目，了解适合货物、参考时效与运输方案。",
+  alternates: { canonical: "/services" },
+};
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig, getServices } from "@/lib/data";

@@ -42,6 +42,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
     notFound();
   }
 
+  const articleUrl = `https://sinoeurologistics-atpr.vercel.app/news/${article.slug}`;
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -55,12 +56,23 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
       "@type": "Organization",
       name: config.company_name || "中欧通联国际物流有限公司",
     },
-    mainEntityOfPage: `https://sinoeurologistics-atpr.vercel.app/news/${article.slug}`,
+    mainEntityOfPage: articleUrl,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "首页", item: "https://sinoeurologistics-atpr.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: "新闻动态", item: "https://sinoeurologistics-atpr.vercel.app/news" },
+      { "@type": "ListItem", position: 3, name: article.title, item: articleUrl },
+    ],
   };
 
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       <section className="relative pt-24 pb-16 bg-navy">

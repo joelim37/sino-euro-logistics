@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
@@ -6,6 +7,12 @@ import { getSiteConfig } from "@/lib/data";
 import { getPublishedNews } from "@/lib/news";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "新闻动态",
+  description: "查看中欧物流、欧洲清关、铁路运输、卡航派送、欧洲仓储与行业趋势相关的最新新闻动态与实务观察。",
+  alternates: { canonical: "/news" },
+};
 
 export default async function NewsPage() {
   const config = await getSiteConfig();
