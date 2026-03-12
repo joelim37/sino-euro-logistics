@@ -1,10 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_noStore as noStore } from "next/cache";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing");
+  }
+
+  return createClient(url, key);
+}
 
 function withImageVersion(url?: string | null, version?: string | null) {
   if (!url) return url;
@@ -22,7 +28,7 @@ function withImageVersion(url?: string | null, version?: string | null) {
 
 export async function getSiteConfig() {
   noStore();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("site_config")
     .select("key, value");
 
@@ -41,7 +47,7 @@ export async function getSiteConfig() {
 
 export async function getServices() {
   noStore();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("services")
     .select("*")
     .eq("is_active", true)
@@ -60,7 +66,7 @@ export async function getServices() {
 
 export async function getServiceBySlug(slug: string) {
   noStore();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("services")
     .select("*")
     .eq("slug", slug)
@@ -92,7 +98,7 @@ export interface Inquiry {
 }
 
 export async function getInquiries() {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("inquiries")
     .select("*")
     .order("created_at", { ascending: false });
@@ -109,7 +115,7 @@ export async function updateInquiryStatus(
   id: string,
   status: "pending" | "contacted" | "completed"
 ) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("inquiries")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
@@ -128,7 +134,7 @@ export async function updateSiteConfig(
   key: string,
   value: string
 ) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("site_config")
     .upsert({ key, value, updated_at: new Date().toISOString() })
     .select()
@@ -156,7 +162,7 @@ export async function updateService(
     is_active: boolean;
   }>
 ) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("services")
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", id)
@@ -184,7 +190,7 @@ export async function createService(
     sort_order?: number;
   }
 ) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("services")
     .insert(service)
     .select()
@@ -199,7 +205,7 @@ export async function createService(
 }
 
 export async function deleteService(id: string) {
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from("services")
     .delete()
     .eq("id", id);

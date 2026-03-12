@@ -1,10 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_noStore as noStore } from "next/cache";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing");
+  }
+
+  return createClient(url, key);
+}
 
 export interface NewsItem {
   id: string;
@@ -27,7 +33,7 @@ export interface NewsItem {
 export async function getPublishedNews(limit?: number) {
   noStore();
 
-  let query = supabase
+  let query = getSupabase()
     .from("news")
     .select("*")
     .eq("status", "published")
@@ -51,7 +57,7 @@ export async function getPublishedNews(limit?: number) {
 export async function getNewsBySlug(slug: string) {
   noStore();
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("news")
     .select("*")
     .eq("slug", slug)
@@ -68,7 +74,7 @@ export async function getNewsBySlug(slug: string) {
 export async function getNewsPreviewById(id: string) {
   noStore();
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("news")
     .select("*")
     .eq("id", id)

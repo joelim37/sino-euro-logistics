@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading1, Heading2, Pilcrow, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Heading1, Heading2, Pilcrow, Image as ImageIcon, Check } from "lucide-react";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 
 interface RichTextEditorProps {
@@ -13,9 +14,21 @@ interface RichTextEditorProps {
 
 const sanitizeImageUrl = (url: string) => url.trim();
 
+type ImageStyle = "center" | "wide" | "left" | "right";
+
+const imageStyleOptions: { value: ImageStyle; label: string; previewClass: string; frameClass: string }[] = [
+  { value: "center", label: "居中", previewClass: "w-24 mx-auto", frameClass: "items-center" },
+  { value: "wide", label: "宽幅", previewClass: "w-full", frameClass: "items-center" },
+  { value: "left", label: "左浮动", previewClass: "w-20 mr-auto", frameClass: "items-start" },
+  { value: "right", label: "右浮动", previewClass: "w-20 ml-auto", frameClass: "items-end" },
+];
+
 export default function RichTextEditor({ label, value, onChange, hint }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [pendingImage, setPendingImage] = useState<{ url: string; name: string } | null>(null);
+  const [imageAlt, setImageAlt] = useState("");
+  const [imageStyle, setImageStyle] = useState<ImageStyle>("center");
 
   const syncValue = () => {
     if (!editorRef.current) return;
@@ -59,21 +72,23 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
     return `<img src="${url}" alt="${alt}" style="max-width:100%;height:auto;border-radius:12px;margin:16px auto;display:block;" />`;
   };
 
-  const askImageStyle = () => {
-    const raw = (window.prompt("图片样式：center / wide / left / right", "center") || "center").trim().toLowerCase();
-    if (["center", "wide", "left", "right"].includes(raw)) return raw;
-    return "center";
+  const beginInsertImageFromMedia = (item: { url: string; name: string }) => {
+    setPendingImage(item);
+    setImageAlt(item.name.replace(/\.[^/.]+$/, ""));
+    setImageStyle("center");
+    setShowMediaPicker(false);
   };
 
-  const addImageFromMedia = (item: { url: string; name: string }) => {
-    if (!editorRef.current) return;
+  const confirmInsertImage = () => {
+    if (!editorRef.current || !pendingImage) return;
     editorRef.current.focus();
-    const alt = (window.prompt("请输入图片 alt 文本（可选）", item.name.replace(/\.[^/.]+$/, "")) || "").replace(/"/g, "&quot;");
-    const style = askImageStyle();
-    const html = buildImageHtml(item.url, alt, style);
+    const alt = imageAlt.replace(/"/g, "&quot;");
+    const html = buildImageHtml(pendingImage.url, alt, imageStyle);
     document.execCommand("insertHTML", false, html);
     syncValue();
-    setShowMediaPicker(false);
+    setPendingImage(null);
+    setImageAlt("");
+    setImageStyle("center");
   };
 
   return (
@@ -118,8 +133,95 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
         actionLabel="插入正文"
         helperText="点击按钮即可把图片一键插入到正文当前位置"
         onClose={() => setShowMediaPicker(false)}
-        onSelect={addImageFromMedia}
+        onSelect={beginInsertImageFromMedia}
       />
+
+      {pendingImage && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-navy">插入正文图片</h3>
+                <p className="text-sm text-gray-500 mt-1">先看效果，再一键插入到当前光标位置</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingImage(null)}
+                className="px-3 py-2 rounded-lg hover:bg-gray-100 text-sm text-gray-600"
+              >
+                关闭
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">图片 Alt 文本</label>
+                  <input
+                    value={imageAlt}
+                    onChange={(e) => setImageAlt(e.target.value)}
+                    className="input-field"
+                    placeholder="例如：中欧物流运输现场"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">展示样式</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {imageStyleOptions.map((option) => {
+                      const selected = imageStyle === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setImageStyle(option.value)}
+                          className={`rounded-xl border p-3 text-left transition-all ${selected ? "border-navy ring-2 ring-navy/10 bg-navy/[0.03]" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-medium text-gray-800">{option.label}</span>
+                            {selected && <Check className="w-4 h-4 text-navy" />}
+                          </div>
+                          <div className={`h-20 rounded-lg bg-gray-100 p-3 flex ${option.frameClass}`}>
+                            <div className={`h-full rounded-md bg-gradient-to-br from-navy/80 to-gold/80 ${option.previewClass}`} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-3">预览</div>
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 min-h-[320px]">
+                  <div className="rounded-xl bg-white p-4 shadow-sm">
+                    <p className="text-sm text-gray-400 mb-4">正文预览效果</p>
+                    <div className="space-y-3 text-sm text-gray-700">
+                      <p>这是一段示意文字，用来看正文图片插入后的版式效果。</p>
+                      <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-white">
+                        <Image src={pendingImage.url} alt={imageAlt || pendingImage.name} width={1200} height={800} className={`h-auto rounded-xl ${imageStyle === "wide" ? "w-full" : imageStyle === "center" ? "w-3/4 mx-auto" : imageStyle === "left" ? "w-1/2 mr-auto" : "w-1/2 ml-auto"}`} />
+                      </div>
+                      <p className={`text-xs text-gray-500 ${imageStyle === "left" ? "text-left" : imageStyle === "right" ? "text-right" : "text-center"}`}>
+                        {imageAlt || "图片说明"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t flex items-center justify-end gap-3 bg-gray-50">
+              <button type="button" onClick={() => setPendingImage(null)} className="px-4 py-2 rounded-lg hover:bg-gray-200 text-gray-600">
+                取消
+              </button>
+              <button type="button" onClick={confirmInsertImage} className="btn-primary inline-flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                插入正文
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

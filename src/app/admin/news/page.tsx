@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import Toast from "@/components/admin/Toast";
@@ -74,6 +74,8 @@ export default function NewsAdminPage() {
     message: "",
     type: "success",
   });
+  const [autosaveState, setAutosaveState] = useState<"idle" | "typing" | "local-saved" | "saving" | "saved" | "error">("idle");
+  const [linkOgToFeatured, setLinkOgToFeatured] = useState(true);
   const previewWindowRef = useRef<Window | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,6 +83,15 @@ export default function NewsAdminPage() {
   const hasLoadedDraftRef = useRef(false);
 
   const canSave = useMemo(() => form.title.trim() && form.slug.trim(), [form.title, form.slug]);
+
+  const autosaveLabelMap: Record<typeof autosaveState, string> = {
+    idle: "自动保存待命",
+    typing: "检测到修改…",
+    "local-saved": "本地草稿已保存",
+    saving: "正在同步数据库草稿…",
+    saved: "数据库草稿已保存",
+    error: "自动保存失败",
+  };
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ open: true, message, type });
@@ -178,10 +189,12 @@ export default function NewsAdminPage() {
     const hasContent = Object.values(form).some((value) => typeof value === "string" && value.trim());
 
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    setAutosaveState(hasContent ? "typing" : "idle");
 
     autosaveTimerRef.current = setTimeout(() => {
       if (!hasContent) {
         localStorage.removeItem(DRAFT_STORAGE_KEY);
+        setAutosaveState("idle");
         return;
       }
       localStorage.setItem(
@@ -191,6 +204,7 @@ export default function NewsAdminPage() {
           slugTouched,
         })
       );
+      setAutosaveState("local-saved");
     }, 800);
   }, [form, slugTouched]);
 
@@ -200,6 +214,7 @@ export default function NewsAdminPage() {
     if (isSaving) return;
 
     if (dbAutosaveTimerRef.current) clearTimeout(dbAutosaveTimerRef.current);
+    setAutosaveState("saving");
 
     dbAutosaveTimerRef.current = setTimeout(async () => {
       try {
@@ -215,7 +230,10 @@ export default function NewsAdminPage() {
         });
 
         const data = await response.json();
-        if (!response.ok) return;
+        if (!response.ok) {
+          setAutosaveState("error");
+          return;
+        }
 
         setForm((prev) => ({
           ...prev,
@@ -223,8 +241,9 @@ export default function NewsAdminPage() {
           slug: data.slug || prev.slug,
         }));
         setIsEditing(true);
+        setAutosaveState("saved");
       } catch {
-        // keep silent for background autosave
+        setAutosaveState("error");
       }
     }, 2500);
   }, [form.title, form.slug, form.summary, form.content, form.featured_image, form.featured_image_alt, form.og_image, form.seo_title, form.seo_description, form.seo_keywords]);
@@ -233,6 +252,8 @@ export default function NewsAdminPage() {
     setForm(emptyForm);
     setIsEditing(false);
     setSlugTouched(false);
+    setAutosaveState("idle");
+    setLinkOgToFeatured(true);
     previewWindowRef.current = null;
     localStorage.removeItem(DRAFT_STORAGE_KEY);
   };
@@ -278,9 +299,21 @@ export default function NewsAdminPage() {
     setForm((prev) => ({ ...prev, slug: slugify(slug) }));
   };
 
+  useEffect(() => {
+    if (!linkOgToFeatured) return;
+    setForm((prev) => {
+      if (prev.og_image === prev.featured_image) return prev;
+      return {
+        ...prev,
+        og_image: prev.featured_image,
+      };
+    });
+  }, [form.featured_image, linkOgToFeatured]);
+
   const handleSave = async () => {
     if (!canSave) return;
     setIsSaving(true);
+    setAutosaveState("saving");
     setError("");
     try {
       const response = await fetch("/api/admin/news", {
@@ -299,11 +332,13 @@ export default function NewsAdminPage() {
         slug: data.slug || prev.slug,
       }));
       setIsEditing(true);
+      setAutosaveState("saved");
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       showToast(form.status === "published" ? "新闻已保存并打开正式文章页" : "草稿已保存并打开预览页");
     } catch (err) {
       const message = err instanceof Error ? err.message : "保存失败";
       setError(message);
+      setAutosaveState("error");
       showToast(message, "error");
     } finally {
       setIsSaving(false);
@@ -397,7 +432,7 @@ export default function NewsAdminPage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <button onClick={() => openPreview(getPreviewUrl(item))} className="p-2 rounded-lg hover:bg-gray-100" title="预览文章"><ExternalLink className="w-4 h-4 text-navy" /></button>
-                          <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); setSlugTouched(true); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
+                          <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); setSlugTouched(true); setLinkOgToFeatured(!item.og_image || item.og_image === item.featured_image); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
                           <button onClick={() => handleDelete(item.id, item.title)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
                         </div>
                       </div>
@@ -424,8 +459,12 @@ export default function NewsAdminPage() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <h2 className="text-xl font-serif text-navy font-bold">{isEditing ? "编辑新闻" : "新建新闻"}</h2>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1">
-                  自动保存：本地 + 数据库草稿
+                <span
+                  className={`text-xs rounded-full px-3 py-1 border inline-flex items-center gap-2 ${autosaveState === "error" ? "text-red-600 bg-red-50 border-red-200" : autosaveState === "saved" ? "text-green-700 bg-green-50 border-green-200" : "text-gray-500 bg-gray-50 border-gray-200"}`}
+                >
+                  {autosaveState === "saving" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {autosaveState === "saved" && <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {autosaveLabelMap[autosaveState]}
                 </span>
                 {form.featured_image_alt && (
                   <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 truncate max-w-[260px]">
@@ -455,7 +494,7 @@ export default function NewsAdminPage() {
               label="正文"
               value={form.content}
               onChange={(value) => setForm({ ...form, content: value })}
-              hint="插图时可选 center / wide / left / right 样式"
+              hint="插图支持可视化选择：居中 / 宽幅 / 左浮动 / 右浮动"
             />
 
             <ImageUploadField
@@ -479,13 +518,31 @@ export default function NewsAdminPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">封面图片 Alt</label>
                 <input value={form.featured_image_alt} onChange={(e) => setForm({ ...form, featured_image_alt: e.target.value })} className="input-field" placeholder="例如：中欧班列货运现场照片" />
               </div>
-              <ImageUploadField
-                label="OG 分享图（可选）"
-                value={form.og_image}
-                onChange={(value) => setForm({ ...form, og_image: value })}
-                folder="news-og"
-                hint="支持媒体库选择；为空则默认使用封面图"
-              />
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={linkOgToFeatured}
+                    onChange={(e) => setLinkOgToFeatured(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-navy focus:ring-navy"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-gray-800">OG 图跟随封面图</div>
+                    <div className="text-xs text-gray-500">开启后，封面图变化时会自动同步到分享图</div>
+                  </div>
+                </label>
+                <ImageUploadField
+                  label="OG 分享图（可选）"
+                  value={form.og_image}
+                  onChange={(value) => {
+                    setLinkOgToFeatured(false);
+                    setForm({ ...form, og_image: value });
+                  }}
+                  onSelectMedia={() => setLinkOgToFeatured(false)}
+                  folder="news-og"
+                  hint={linkOgToFeatured ? "当前已与封面图联动；手动修改后会自动关闭联动" : "支持媒体库选择；为空则默认使用封面图"}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment variables are missing");
+  }
+
+  return createClient(url, key);
+}
 
 // GET - 获取所有询价
 export async function GET() {
@@ -17,6 +23,7 @@ export async function GET() {
   }
 
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from("inquiries")
       .select("*")
@@ -46,6 +53,7 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, status } = body;
+    const supabase = getSupabase();
 
     const { error } = await supabase
       .from("inquiries")
