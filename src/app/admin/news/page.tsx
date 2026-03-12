@@ -14,6 +14,7 @@ interface NewsItem {
   content: string;
   featured_image: string;
   featured_image_alt: string;
+  featured_image_position?: string;
   og_image: string;
   seo_title: string;
   seo_description: string;
@@ -32,6 +33,7 @@ const emptyForm: NewsItem = {
   content: "",
   featured_image: "",
   featured_image_alt: "",
+  featured_image_position: "center center",
   og_image: "",
   seo_title: "",
   seo_description: "",
@@ -78,6 +80,7 @@ export default function NewsAdminPage() {
   const [autosaveState, setAutosaveState] = useState<"idle" | "typing" | "local-saved" | "saving" | "saved" | "error">("idle");
   const [linkOgToFeatured, setLinkOgToFeatured] = useState(true);
   const [isSavingTop, setIsSavingTop] = useState(false);
+  const [draggingTopId, setDraggingTopId] = useState<string | null>(null);
   const previewWindowRef = useRef<Window | null>(null);
   const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -387,13 +390,9 @@ export default function NewsAdminPage() {
     }
   };
 
-  const handleToggleTop = async (item: NewsItem) => {
-    if (!item.id) return;
+  const saveTopIds = useCallback(async (nextTopIds: string[], successMessage: string) => {
     setIsSavingTop(true);
     try {
-      const currentTopIds = news.filter((entry) => entry.is_top && entry.id).map((entry) => entry.id as string);
-      const nextTopIds = item.is_top ? currentTopIds.filter((id) => id !== item.id) : [item.id, ...currentTopIds.filter((id) => id !== item.id)].slice(0, 3);
-
       const response = await fetch("/api/admin/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -404,12 +403,33 @@ export default function NewsAdminPage() {
       if (!response.ok) throw new Error(data.error || "置顶保存失败");
 
       await fetchNews();
-      showToast(item.is_top ? "已取消置顶" : "已设为首页推荐置顶");
+      showToast(successMessage);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "置顶保存失败", "error");
     } finally {
       setIsSavingTop(false);
     }
+  }, [fetchNews, showToast]);
+
+  const handleToggleTop = async (item: NewsItem) => {
+    if (!item.id) return;
+    const currentTopIds = news.filter((entry) => entry.is_top && entry.id).map((entry) => entry.id as string);
+    const nextTopIds = item.is_top ? currentTopIds.filter((id) => id !== item.id) : [item.id, ...currentTopIds.filter((id) => id !== item.id)].slice(0, 3);
+    await saveTopIds(nextTopIds, item.is_top ? "已取消置顶" : "已设为首页推荐置顶");
+  };
+
+  const topStories = useMemo(() => news.filter((item) => item.is_top && item.id), [news]);
+
+  const handleTopDrop = async (targetId: string) => {
+    if (!draggingTopId || draggingTopId === targetId) return;
+    const ordered = [...topStories];
+    const fromIndex = ordered.findIndex((item) => item.id === draggingTopId);
+    const toIndex = ordered.findIndex((item) => item.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const [moved] = ordered.splice(fromIndex, 1);
+    ordered.splice(toIndex, 0, moved);
+    setDraggingTopId(null);
+    await saveTopIds(ordered.map((item) => item.id as string), "首页推荐顺序已更新");
   };
 
   return (
@@ -429,10 +449,46 @@ export default function NewsAdminPage() {
         {error && <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-200">{error}</div>}
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-          <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm p-6 space-y-4 h-fit">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-serif text-navy font-bold">已有新闻</h2>
+          <div className="xl:col-span-2 space-y-6 h-fit">
+            <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-serif text-navy font-bold">首页推荐规则</h2>
+                {isSavingTop && <span className="text-xs text-gray-400">保存中...</span>}
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm text-gray-500">已置顶的文章会优先出现在首页推荐区。拖拽可调整推荐顺序。</p>
+                {topStories.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">还没有置顶文章。先在下方列表里给已发布新闻点亮星标。</div>
+                ) : (
+                  <div className="space-y-2">
+                    {topStories.map((item, index) => (
+                      <div
+                        key={item.id}
+                        draggable
+                        onDragStart={() => setDraggingTopId(item.id || null)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => item.id && handleTopDrop(item.id)}
+                        className={`rounded-xl border px-4 py-3 bg-white cursor-move transition-all ${draggingTopId === item.id ? "border-navy opacity-70" : "border-gray-200 hover:border-gray-300"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs flex items-center justify-center shrink-0">{index + 1}</span>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-navy truncate">{item.title}</div>
+                            <div className="text-xs text-gray-500 truncate">/{item.slug}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
+
+            <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-serif text-navy font-bold">已有新闻</h2>
+              </div>
 
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -519,6 +575,7 @@ export default function NewsAdminPage() {
                 </div>
               </>
             )}
+            </div>
           </div>
 
           <div className="xl:col-span-3 bg-white rounded-2xl shadow-sm p-6 space-y-5">
@@ -576,7 +633,9 @@ export default function NewsAdminPage() {
                 }));
               }}
               folder="news"
-              hint="支持媒体库选择或上传本地图片"
+              hint="支持媒体库选择或上传本地图片；下方可调整封面显示焦点"
+              focusPosition={form.featured_image_position || "center center"}
+              onFocusPositionChange={(value) => setForm({ ...form, featured_image_position: value })}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -20,6 +20,7 @@ export interface NewsItem {
   content: string | null;
   featured_image: string | null;
   featured_image_alt: string | null;
+  featured_image_position?: string | null;
   og_image: string | null;
   seo_title: string | null;
   seo_description: string | null;
@@ -35,53 +36,61 @@ export async function getPublishedNews(limit?: number) {
   noStore();
 
   const supabase = getSupabase();
-  const [{ data, error }, { data: configRows, error: configError }] = await Promise.all([
-    (limit
-      ? supabase
-          .from("news")
-          .select("*")
-          .eq("status", "published")
-          .order("published_at", { ascending: false, nullsFirst: false })
-          .order("created_at", { ascending: false })
-          .limit(limit)
-      : supabase
-          .from("news")
-          .select("*")
-          .eq("status", "published")
-          .order("published_at", { ascending: false, nullsFirst: false })
-          .order("created_at", { ascending: false })),
-    supabase.from("site_config").select("key, value").eq("key", "home_news_top_ids"),
-  ]);
+  const { data, error } = await supabase
+    .from("news")
+    .select("*")
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching news:", error);
     return [] as NewsItem[];
   }
 
+  const articles = (data || []) as NewsItem[];
+  const configKeys = [
+    "home_news_top_ids",
+    "home_news_rule",
+    ...articles.map((item) => `news_cover_focus:${item.slug}`),
+  ];
+
+  const { data: configRows, error: configError } = await supabase
+    .from("site_config")
+    .select("key, value")
+    .in("key", configKeys);
+
   if (configError) {
-    console.error("Error fetching top news config:", configError);
+    console.error("Error fetching news config:", configError);
   }
 
-  const topIds = (configRows?.[0]?.value || "")
+  const configMap = Object.fromEntries((configRows || []).map((item) => [item.key, item.value]));
+  const topIds = (configMap.home_news_top_ids || "")
     .split(",")
     .map((item: string) => item.trim())
     .filter(Boolean);
-
   const topSet = new Set(topIds);
-  const ordered = [...(data || [])].sort((a, b) => {
-    const aTop = topSet.has(a.id) ? topIds.indexOf(a.id) : Number.POSITIVE_INFINITY;
-    const bTop = topSet.has(b.id) ? topIds.indexOf(b.id) : Number.POSITIVE_INFINITY;
-    if (aTop !== bTop) return aTop - bTop;
+  const homeNewsRule = configMap.home_news_rule || "top_then_fresh";
+
+  const ordered = [...articles].sort((a, b) => {
+    if (homeNewsRule !== "fresh_only") {
+      const aTop = topSet.has(a.id) ? topIds.indexOf(a.id) : Number.POSITIVE_INFINITY;
+      const bTop = topSet.has(b.id) ? topIds.indexOf(b.id) : Number.POSITIVE_INFINITY;
+      if (aTop !== bTop) return aTop - bTop;
+    }
 
     const aTime = new Date(a.published_at || a.created_at || 0).getTime();
     const bTime = new Date(b.published_at || b.created_at || 0).getTime();
     return bTime - aTime;
   });
 
-  return ordered.map((item) => ({
-    ...(item as NewsItem),
+  const enriched = ordered.map((item) => ({
+    ...item,
     is_top: topSet.has(item.id),
+    featured_image_position: configMap[`news_cover_focus:${item.slug}`] || item.featured_image_position || "center center",
   }));
+
+  return typeof limit === "number" ? enriched.slice(0, limit) : enriched;
 }
 
 export async function getNewsBySlug(slug: string) {

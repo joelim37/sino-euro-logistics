@@ -42,8 +42,25 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
     notFound();
   }
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.seo_title || article.title,
+    description: article.seo_description || article.summary || "",
+    image: article.og_image || article.featured_image || undefined,
+    datePublished: article.published_at || undefined,
+    dateModified: article.updated_at || article.published_at || undefined,
+    author: { "@type": "Organization", name: config.company_name || "中欧通联国际物流有限公司" },
+    publisher: {
+      "@type": "Organization",
+      name: config.company_name || "中欧通联国际物流有限公司",
+    },
+    mainEntityOfPage: `https://sinoeurologistics-atpr.vercel.app/news/${article.slug}`,
+  };
+
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <Navbar />
 
       <section className="relative pt-24 pb-16 bg-navy">
@@ -58,7 +75,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {article.featured_image && (
             <div className="relative h-80 md:h-[420px] rounded-2xl overflow-hidden mb-10">
-              <Image src={article.featured_image} alt={article.featured_image_alt || article.title} fill className="object-cover" />
+              <Image src={article.featured_image} alt={article.featured_image_alt || article.title} fill className="object-cover" style={{ objectPosition: article.featured_image_position || "center center" }} />
             </div>
           )}
 

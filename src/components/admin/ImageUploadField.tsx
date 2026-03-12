@@ -20,7 +20,15 @@ interface ImageUploadFieldProps {
   folder?: string;
   placeholder?: string;
   hint?: string;
+  focusPosition?: string;
+  onFocusPositionChange?: (value: string) => void;
 }
+
+const focusOptions = [
+  "left top", "center top", "right top",
+  "left center", "center center", "right center",
+  "left bottom", "center bottom", "right bottom",
+];
 
 export default function ImageUploadField({
   label,
@@ -30,6 +38,8 @@ export default function ImageUploadField({
   folder = "general",
   placeholder = "请输入图片 URL 或上传本地图片",
   hint,
+  focusPosition = "center center",
+  onFocusPositionChange,
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -120,8 +130,31 @@ export default function ImageUploadField({
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           {value ? (
-            <div className="relative w-full max-w-sm h-44 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-              <Image src={value} alt={label} fill className="object-cover" />
+            <div className="space-y-3">
+              <div className="relative w-full max-w-sm h-44 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                <Image src={value} alt={label} fill className="object-cover" style={{ objectPosition: focusPosition }} />
+              </div>
+              {onFocusPositionChange && (
+                <div>
+                  <p className="text-sm text-gray-700 mb-2">封面图焦点 / 裁切位置</p>
+                  <div className="grid grid-cols-3 gap-2 max-w-sm">
+                    {focusOptions.map((option) => {
+                      const active = focusPosition === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => onFocusPositionChange(option)}
+                          className={`h-10 rounded-lg border text-[11px] transition-colors ${active ? "border-navy bg-navy text-white" : "border-gray-300 bg-white hover:bg-gray-50 text-gray-600"}`}
+                          title={option}
+                        >
+                          {option.replace(" ", " / ")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-full max-w-sm h-44 rounded-xl border border-dashed border-gray-300 flex items-center justify-center text-gray-400 bg-gray-50">

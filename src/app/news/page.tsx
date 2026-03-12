@@ -32,7 +32,7 @@ export default async function NewsPage() {
                 <Link key={item.id} href={`/news/${item.slug}`} className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative h-56 bg-gray-100">
                     {item.featured_image ? (
-                      <Image src={item.featured_image} alt={item.title} fill className="object-cover" />
+                      <Image src={item.featured_image} alt={item.title} fill className="object-cover" style={{ objectPosition: item.featured_image_position || "center center" }} />
                     ) : null}
                   </div>
                   <div className="p-6">

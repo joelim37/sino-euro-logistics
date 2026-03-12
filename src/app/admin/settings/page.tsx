@@ -14,6 +14,7 @@ interface SiteSettings {
   about_content: string;
   footer_content: string;
   home_news_count: string;
+  home_news_rule: string;
 }
 
 const SETTINGS_KEYS = [
@@ -27,6 +28,7 @@ const SETTINGS_KEYS = [
   "about_content",
   "footer_content",
   "home_news_count",
+  "home_news_rule",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -41,6 +43,7 @@ export default function SettingsAdminPage() {
     about_content: "",
     footer_content: "",
     home_news_count: "3",
+    home_news_rule: "top_then_fresh",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,6 +66,7 @@ export default function SettingsAdminPage() {
             about_content: data.config.about_content || "",
             footer_content: data.config.footer_content || "",
             home_news_count: data.config.home_news_count || "3",
+            home_news_rule: data.config.home_news_rule || "top_then_fresh",
           });
         }
       } catch (error) {
@@ -251,19 +255,42 @@ export default function SettingsAdminPage() {
         {/* Homepage News */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-navy mb-6">首页新闻推荐</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              首页显示新闻数量
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="12"
-              value={settings.home_news_count}
-              onChange={(e) => setSettings({ ...settings, home_news_count: e.target.value })}
-              className="input-field"
-              placeholder="3"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                首页显示新闻数量
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="12"
+                value={settings.home_news_count}
+                onChange={(e) => setSettings({ ...settings, home_news_count: e.target.value })}
+                className="input-field"
+                placeholder="3"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">推荐规则</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, home_news_rule: "top_then_fresh" })}
+                  className={`rounded-xl border px-4 py-3 text-left transition-all ${settings.home_news_rule === "top_then_fresh" ? "border-navy bg-navy/5 ring-2 ring-navy/10" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+                >
+                  <div className="text-sm font-medium text-gray-800">优先置顶，再按发布时间</div>
+                  <div className="text-xs text-gray-500 mt-1">适合首页推荐位，手动控制重点内容</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, home_news_rule: "fresh_only" })}
+                  className={`rounded-xl border px-4 py-3 text-left transition-all ${settings.home_news_rule === "fresh_only" ? "border-navy bg-navy/5 ring-2 ring-navy/10" : "border-gray-200 hover:border-gray-300 bg-white"}`}
+                >
+                  <div className="text-sm font-medium text-gray-800">只按发布时间</div>
+                  <div className="text-xs text-gray-500 mt-1">忽略置顶顺序，最新发布的新闻优先</div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

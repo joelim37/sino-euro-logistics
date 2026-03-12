@@ -47,9 +47,29 @@ export default async function HomePage() {
   const news = await getPublishedNews(homeNewsCount);
   const featuredNews = news[0];
   const secondaryNews = news.slice(1, Math.max(homeNewsCount, 3));
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: config.company_name || "中欧通联国际物流有限公司",
+    alternateName: config.company_name_en || "Sino Euro Logistics",
+    url: "https://sinoeurologistics-atpr.vercel.app",
+    email: config.company_email || undefined,
+    telephone: config.company_phone || undefined,
+    address: config.company_address
+      ? {
+          "@type": "PostalAddress",
+          streetAddress: config.company_address,
+          addressCountry: "CN",
+        }
+      : undefined,
+    contactPoint: config.company_phone
+      ? [{ "@type": "ContactPoint", telephone: config.company_phone, contactType: "sales" }]
+      : undefined,
+  };
 
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <Navbar />
 
       {/* Hero Banner */}
@@ -185,7 +205,7 @@ export default async function HomePage() {
                   className="lg:col-span-3 group relative min-h-[420px] rounded-[28px] overflow-hidden bg-navy shadow-lg"
                 >
                   {featuredNews.featured_image ? (
-                    <Image src={featuredNews.featured_image} alt={featuredNews.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Image src={featuredNews.featured_image} alt={featuredNews.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" style={{ objectPosition: featuredNews.featured_image_position || "center center" }} />
                   ) : null}
                   <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/65 to-navy/10" />
                   <div className="absolute inset-x-0 bottom-0 p-8 md:p-10 text-white">
@@ -219,7 +239,7 @@ export default async function HomePage() {
                     <div className="flex flex-col sm:flex-row h-full">
                       <div className="relative sm:w-44 h-44 sm:h-auto bg-gray-100 shrink-0 overflow-hidden">
                         {item.featured_image ? (
-                          <Image src={item.featured_image} alt={item.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                          <Image src={item.featured_image} alt={item.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" style={{ objectPosition: item.featured_image_position || "center center" }} />
                         ) : null}
                       </div>
                       <div className="p-5 flex-1">

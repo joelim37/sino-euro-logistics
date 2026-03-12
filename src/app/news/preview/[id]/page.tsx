@@ -54,7 +54,7 @@ export default async function NewsPreviewPage({ params }: { params: { id: string
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {article.featured_image && (
             <div className="relative h-80 md:h-[420px] rounded-2xl overflow-hidden mb-10">
-              <Image src={article.featured_image} alt={article.featured_image_alt || article.title} fill className="object-cover" />
+              <Image src={article.featured_image} alt={article.featured_image_alt || article.title} fill className="object-cover" style={{ objectPosition: article.featured_image_position || "center center" }} />
             </div>
           )}
 
