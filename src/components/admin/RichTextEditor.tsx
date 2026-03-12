@@ -23,6 +23,8 @@ const imageStyleOptions: { value: ImageStyle; label: string; previewClass: strin
   { value: "right", label: "右浮动", previewClass: "w-20 ml-auto", frameClass: "items-end" },
 ];
 
+const articleTemplate = `<h2>市场结论摘要</h2><p>先用 1-2 段把本次行业变化、主要影响和建议讲清楚。</p><h2>关键观察</h2><ul><li>观察 1：本周/本月运价、舱位、时效或政策变化</li><li>观察 2：重点国家/口岸/仓库动态</li><li>观察 3：对跨境卖家或外贸企业的直接影响</li></ul><h2>企业建议</h2><ol><li>建议 1：如何提前订舱或锁仓</li><li>建议 2：如何准备清关资料</li><li>建议 3：如何安排尾程与仓库预约</li></ol><h2>适用客户</h2><p>适合哪些货主、卖家或供应链场景。</p><h2>常见问题</h2><p><strong>Q：这类情况会影响哪些国家？</strong></p><p>A：写一个直接、明确、可摘取的回答。</p>`;
+
 export default function RichTextEditor({ label, value, onChange, hint }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -55,6 +57,15 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
     const cleanUrl = sanitizeImageUrl(url);
     if (!cleanUrl) return;
     run("insertImage", cleanUrl);
+  };
+
+  const insertArticleTemplate = () => {
+    if (!editorRef.current) return;
+    const shouldReplace = !value.trim() || value === "<p></p>" || window.confirm("插入模板会在当前光标位置加入标准结构，是否继续？");
+    if (!shouldReplace) return;
+    editorRef.current.focus();
+    document.execCommand("insertHTML", false, articleTemplate);
+    syncValue();
   };
 
   const buildImageHtml = (url: string, alt: string, style: string) => {
@@ -177,6 +188,9 @@ export default function RichTextEditor({ label, value, onChange, hint }: RichTex
             </button>
             <button type="button" onClick={addImageByUrl} className="px-3 py-2 rounded hover:bg-gray-200 text-sm" title="手动输入图片地址">
               URL插图
+            </button>
+            <button type="button" onClick={insertArticleTemplate} className="px-3 py-2 rounded hover:bg-gray-200 text-sm" title="插入标准化行业文章模板">
+              文章模板
             </button>
           </div>
 
