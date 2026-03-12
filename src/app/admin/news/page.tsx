@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Copy, Edit2, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import Toast from "@/components/admin/Toast";
@@ -92,6 +92,9 @@ export default function NewsAdminPage() {
     saved: "数据库草稿已保存",
     error: "自动保存失败",
   };
+
+  const seoTitleLength = form.seo_title.trim().length;
+  const seoDescriptionLength = form.seo_description.trim().length;
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ open: true, message, type });
@@ -360,6 +363,27 @@ export default function NewsAdminPage() {
     showToast("新闻已删除");
   };
 
+  const getPublishedUrl = (slug?: string) => {
+    if (!slug) return "";
+    if (typeof window === "undefined") return `/news/${slug}`;
+    return `${window.location.origin}/news/${slug}`;
+  };
+
+  const handleCopyPublishedUrl = async (slug?: string) => {
+    const url = getPublishedUrl(slug);
+    if (!url) {
+      showToast("请先保存文章并生成 slug", "error");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("正式文章链接已复制");
+    } catch {
+      showToast("复制失败，请手动复制链接", "error");
+    }
+  };
+
   return (
     <>
       <div className="space-y-8">
@@ -431,6 +455,9 @@ export default function NewsAdminPage() {
                           <p className="text-xs mt-2 inline-flex px-2 py-1 rounded bg-gray-100 text-gray-600">{item.status === "published" ? "已发布" : "草稿"}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {item.status === "published" && (
+                            <button onClick={() => handleCopyPublishedUrl(item.slug)} className="p-2 rounded-lg hover:bg-gray-100" title="复制正式链接"><Copy className="w-4 h-4 text-navy" /></button>
+                          )}
                           <button onClick={() => openPreview(getPreviewUrl(item))} className="p-2 rounded-lg hover:bg-gray-100" title="预览文章"><ExternalLink className="w-4 h-4 text-navy" /></button>
                           <button onClick={() => { setForm({ ...emptyForm, ...item }); setIsEditing(true); setSlugTouched(true); setLinkOgToFeatured(!item.og_image || item.og_image === item.featured_image); }} className="p-2 rounded-lg hover:bg-gray-100" title="编辑"><Edit2 className="w-4 h-4 text-navy" /></button>
                           <button onClick={() => handleDelete(item.id, item.title)} className="p-2 rounded-lg hover:bg-red-50" title="删除"><Trash2 className="w-4 h-4 text-red-500" /></button>
@@ -562,12 +589,20 @@ export default function NewsAdminPage() {
             <div className="border-t pt-6 space-y-4">
               <h3 className="text-lg font-semibold text-navy">SEO 设置</h3>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">SEO 标题</label>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">SEO 标题</label>
+                  <span className={`text-xs ${seoTitleLength > 60 ? "text-amber-600" : "text-gray-400"}`}>{seoTitleLength}/60</span>
+                </div>
                 <input value={form.seo_title} onChange={(e) => setForm({ ...form, seo_title: e.target.value })} className="input-field" placeholder="为空则默认使用新闻标题" />
+                <p className="text-xs text-gray-500 mt-2">建议控制在 30-60 字，过长可能在搜索结果中被截断。</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">SEO 描述</label>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-sm font-medium text-gray-700">SEO 描述</label>
+                  <span className={`text-xs ${seoDescriptionLength > 160 ? "text-amber-600" : seoDescriptionLength < 60 && seoDescriptionLength > 0 ? "text-amber-500" : "text-gray-400"}`}>{seoDescriptionLength}/160</span>
+                </div>
                 <textarea value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="建议 60-160 字" />
+                <p className="text-xs text-gray-500 mt-2">建议控制在 60-160 字，太短信息不足，太长也容易被截断。</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">SEO 关键词</label>
@@ -576,6 +611,12 @@ export default function NewsAdminPage() {
             </div>
 
             <div className="flex justify-end gap-3 pt-2 flex-wrap">
+              {form.status === "published" && form.slug.trim() && (
+                <button onClick={() => handleCopyPublishedUrl(form.slug)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 inline-flex items-center gap-2">
+                  <Copy className="w-4 h-4" />
+                  复制正式链接
+                </button>
+              )}
               <button onClick={handlePreview} disabled={!form.slug.trim()} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 inline-flex items-center gap-2 disabled:opacity-60">
                 <ExternalLink className="w-4 h-4" />
                 预览文章
