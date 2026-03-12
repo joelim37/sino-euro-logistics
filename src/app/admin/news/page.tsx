@@ -332,6 +332,15 @@ export default function NewsAdminPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "保存失败");
+
+      if ((form.featured_image_position || "center center") && (data.slug || form.slug)) {
+        await fetch("/api/admin/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [`news_cover_focus:${data.slug || form.slug}`]: form.featured_image_position || "center center" }),
+        });
+      }
+
       await fetchNews();
       const nextUrl = form.status === "published" ? data.publishedUrl : data.previewUrl;
       if (nextUrl) openPreview(nextUrl);

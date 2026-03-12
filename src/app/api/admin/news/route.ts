@@ -30,7 +30,6 @@ async function ensureNewsTable() {
   summary text,
   content text,
   featured_image text,
-  featured_image_position text,
   seo_title text,
   seo_description text,
   seo_keywords text,
@@ -58,17 +57,33 @@ export async function GET() {
     if (ensured) return ensured;
 
     const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from("news")
-      .select("*")
-      .order("published_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false });
+    const [{ data, error }, { data: configRows, error: configError }] = await Promise.all([
+      supabase
+        .from("news")
+        .select("*")
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false }),
+      supabase.from("site_config").select("key, value"),
+    ]);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ news: data || [] });
+    if (configError) {
+      return NextResponse.json({ error: configError.message }, { status: 500 });
+    }
+
+    const configMap = Object.fromEntries((configRows || []).map((item) => [item.key, item.value]));
+    const topIds = (configMap.home_news_top_ids || "").split(",").map((item: string) => item.trim()).filter(Boolean);
+    const topSet = new Set(topIds);
+    const news = (data || []).map((item) => ({
+      ...item,
+      is_top: topSet.has(item.id),
+      featured_image_position: configMap[`news_cover_focus:${item.slug}`] || "center center",
+    }));
+
+    return NextResponse.json({ news });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "服务器错误" }, { status: 500 });
   }
@@ -93,7 +108,6 @@ export async function POST(request: NextRequest) {
       content: body.content || "",
       featured_image: body.featured_image || "",
       featured_image_alt: body.featured_image_alt || "",
-      featured_image_position: body.featured_image_position || "center center",
       og_image: body.og_image || "",
       seo_title: body.seo_title || "",
       seo_description: body.seo_description || "",
