@@ -112,6 +112,49 @@ export default async function ContactPage() {
         </div>
       </section>
 
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">咨询前建议准备的信息</h2>
+            <p className="text-gray-600">如果你提前准备好这些信息，我们通常能更快给出更准确的运输建议和报价。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-2xl bg-bg border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-navy mb-3">货物基础信息</h3>
+              <ul className="text-gray-600 space-y-2 list-disc pl-5">
+                <li>品名 / HS 相关描述</li>
+                <li>重量、体积、件数</li>
+                <li>是否普货 / 敏感货 / 高货值货物</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl bg-bg border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-navy mb-3">运输与交付要求</h3>
+              <ul className="text-gray-600 space-y-2 list-disc pl-5">
+                <li>起运地 / 目的地国家与城市</li>
+                <li>希望使用班列、卡航还是海运</li>
+                <li>是否有明确时效要求或促销节点</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl bg-bg border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-navy mb-3">清关相关信息</h3>
+              <ul className="text-gray-600 space-y-2 list-disc pl-5">
+                <li>是否已有收货主体 / 税号</li>
+                <li>是否需要欧盟清关协助</li>
+                <li>是否需要资料预审</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl bg-bg border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-navy mb-3">尾程与仓储安排</h3>
+              <ul className="text-gray-600 space-y-2 list-disc pl-5">
+                <li>是否派送到门 / 入仓 / 海外仓</li>
+                <li>是否需要预约仓库窗口</li>
+                <li>是否有固定交付时间要求</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <Footer
         companyName={config.company_name}
         companyNameEn={config.company_name_en}

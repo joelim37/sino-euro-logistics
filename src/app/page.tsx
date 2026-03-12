@@ -66,6 +66,21 @@ const faqs = [
   },
 ];
 
+const targetAudience = [
+  {
+    title: "跨境电商卖家",
+    description: "适合需要稳定补货、关注入仓时效和尾程派送效率的亚马逊、独立站或平台卖家。",
+  },
+  {
+    title: "传统外贸企业",
+    description: "适合希望把中欧运输、清关与派送统一给专业团队管理的制造商与出口商。",
+  },
+  {
+    title: "大宗货与项目货客户",
+    description: "适合对成本、批量出货和多节点交付有明确计划需求的企业客户。",
+  },
+];
+
 export default async function HomePage() {
   const config = await getSiteConfig();
   const services = await getServices();
@@ -307,6 +322,24 @@ export default async function HomePage() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Audience Section */}
+      <section className="py-20 bg-bg border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-serif text-navy font-bold mb-4">这套方案适合谁</h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">如果你属于下面这些典型场景之一，这个站点里的服务内容基本就是为你准备的。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {targetAudience.map((item) => (
+              <div key={item.title} className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm">
+                <h3 className="text-xl font-serif text-navy font-bold mb-3">{item.title}</h3>
+                <p className="text-gray-600 leading-7">{item.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
