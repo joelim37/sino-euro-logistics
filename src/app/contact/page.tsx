@@ -24,11 +24,17 @@ export default async function ContactPage() {
     mainEntity: {
       "@type": "Organization",
       name: config.company_name || "中欧通联国际物流有限公司",
+      alternateName: config.company_name_en || "Sino Euro Logistics",
       email: config.company_email || undefined,
       telephone: config.company_phone || undefined,
+      contactPoint: [
+        config.company_phone ? { "@type": "ContactPoint", telephone: config.company_phone, contactType: "sales" } : null,
+        config.company_email ? { "@type": "ContactPoint", email: config.company_email, contactType: "customer support" } : null,
+      ].filter(Boolean),
       address: config.company_address
         ? { "@type": "PostalAddress", streetAddress: config.company_address, addressCountry: "CN" }
         : undefined,
+      areaServed: ["Europe", "Germany", "Poland", "France"],
     },
   };
 

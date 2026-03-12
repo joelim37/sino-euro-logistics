@@ -29,9 +29,22 @@ const certifications = [
 
 export default async function AboutPage() {
   const config = await getSiteConfig();
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: config.company_name || "中欧通联国际物流有限公司",
+    alternateName: config.company_name_en || "Sino Euro Logistics",
+    url: "https://sinoeurologistics-atpr.vercel.app",
+    description: config.about_content || "专注中欧物流的一站式国际物流服务商。",
+    areaServed: ["Germany", "Poland", "France", "Netherlands", "Belgium", "Europe"],
+    email: config.company_email || undefined,
+    telephone: config.company_phone || undefined,
+    address: config.company_address ? { "@type": "PostalAddress", streetAddress: config.company_address, addressCountry: "CN" } : undefined,
+  };
 
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <Navbar />
 
       {/* Hero Section */}

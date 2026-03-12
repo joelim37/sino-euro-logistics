@@ -21,12 +21,49 @@ const iconMap: Record<string, React.ElementType> = {
   "file-check": FileCheck,
 };
 
+const serviceFaqs = [
+  {
+    question: "中欧班列、卡航、海运怎么选？",
+    answer: "如果希望兼顾时效与成本，中欧班列通常更均衡；如果对交付时效更敏感，卡航会更灵活；如果以大货、成本控制为优先，海运更有优势。",
+  },
+  {
+    question: "可以提供清关和尾程派送吗？",
+    answer: "可以。我们可根据货物类型与目的国要求，提供主程运输、欧盟清关、尾程派送到门的一体化方案。",
+  },
+  {
+    question: "发货前最需要确认什么？",
+    answer: "建议优先确认货物品名、件重体积、申报价值、收货国家、交付时效以及是否需要入仓预约或清关预审。",
+  },
+];
+
 export default async function ServicesPage() {
   const config = await getSiteConfig();
   const services = await getServices();
+  const servicesJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: services.map((service, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: service.name,
+      description: service.description,
+      url: "https://sinoeurologistics-atpr.vercel.app/services",
+    })),
+  };
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: serviceFaqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  };
 
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(servicesJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <Navbar />
 
       {/* Hero Section */}
@@ -94,6 +131,15 @@ export default async function ServicesPage() {
                       </div>
                     </div>
 
+                    <div className="rounded-2xl bg-white border border-gray-100 p-5 mb-6 space-y-3">
+                      <h3 className="text-base font-semibold text-navy">适用场景</h3>
+                      <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
+                        <li>需要稳定跨境运输链路的外贸企业</li>
+                        <li>关注欧洲时效与清关协同的跨境卖家</li>
+                        <li>希望把主程、清关、尾程统一管理的货主</li>
+                      </ul>
+                    </div>
+
                     <Link href="/contact" className="btn-primary">
                       立即咨询
                     </Link>
@@ -101,6 +147,24 @@ export default async function ServicesPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">服务相关常见问题</h2>
+            <p className="text-gray-600">把客户在咨询物流方案前最常问的问题，先直接说清楚。</p>
+          </div>
+          <div className="space-y-4">
+            {serviceFaqs.map((faq) => (
+              <div key={faq.question} className="rounded-2xl border border-gray-100 bg-bg p-6">
+                <h3 className="text-lg font-semibold text-navy mb-3">{faq.question}</h3>
+                <p className="text-gray-600 leading-7">{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
