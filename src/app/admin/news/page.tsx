@@ -166,7 +166,7 @@ export default function NewsAdminPage() {
       const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft) as { form: NewsItem; slugTouched: boolean };
-        if (parsed?.form) {
+        if (parsed?.form && (!parsed.form.id || parsed.form.status === "draft")) {
           setForm(parsed.form);
           setSlugTouched(Boolean(parsed.slugTouched));
           setIsEditing(Boolean(parsed.form.id));
@@ -221,15 +221,16 @@ export default function NewsAdminPage() {
 
     dbAutosaveTimerRef.current = setTimeout(async () => {
       try {
-        const draftPayload = {
+        const autosavePayload = {
           ...form,
-          status: "draft",
+          status: form.id ? form.status : "draft",
+          published_at: form.id ? form.published_at : null,
         };
 
         const response = await fetch("/api/admin/news", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draftPayload),
+          body: JSON.stringify(autosavePayload),
         });
 
         const data = await response.json();
