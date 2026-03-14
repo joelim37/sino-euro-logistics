@@ -34,6 +34,16 @@ interface SiteSettings {
   value_2_description: string;
   value_3_title: string;
   value_3_description: string;
+  capabilities_section_title: string;
+  capabilities_section_subtitle: string;
+  capability_1_title: string;
+  capability_1_description: string;
+  capability_2_title: string;
+  capability_2_description: string;
+  capability_3_title: string;
+  capability_3_description: string;
+  capability_4_title: string;
+  capability_4_description: string;
 }
 
 const SETTINGS_KEYS = [
@@ -66,6 +76,16 @@ const SETTINGS_KEYS = [
   "value_2_description",
   "value_3_title",
   "value_3_description",
+  "capabilities_section_title",
+  "capabilities_section_subtitle",
+  "capability_1_title",
+  "capability_1_description",
+  "capability_2_title",
+  "capability_2_description",
+  "capability_3_title",
+  "capability_3_description",
+  "capability_4_title",
+  "capability_4_description",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -99,6 +119,16 @@ export default function SettingsAdminPage() {
     value_2_description: "从提货、主程、清关到尾程预约，我们强调关键节点清晰、异常响应及时、交付结果可追踪。",
     value_3_title: "长期方案协同",
     value_3_description: "我们不只做单票运输，更关注客户长期补货节奏、仓配协同和整体物流成本优化。",
+    capabilities_section_title: "我们的服务能力",
+    capabilities_section_subtitle: "相比堆数字，我们更愿意把真正能影响交付结果的能力讲清楚。",
+    capability_1_title: "多运输方式协同",
+    capability_1_description: "覆盖中欧班列、卡航、海运、清关与尾程派送，可根据货物属性和交付节奏组合方案。",
+    capability_2_title: "欧洲链路衔接能力",
+    capability_2_description: "关注目的国清关要求、送仓预约、末端派送与仓配协同，减少运输断点。",
+    capability_3_title: "面向B端复杂需求",
+    capability_3_description: "可支持补货、项目货、门到门交付、多批次出运等更贴近企业采购场景的物流需求。",
+    capability_4_title: "方案先行而非模板报价",
+    capability_4_description: "在报价前优先确认品名、时效、交付地点与清关条件，让方案更接近真实落地。",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -140,6 +170,16 @@ export default function SettingsAdminPage() {
             value_2_description: data.config.value_2_description || "从提货、主程、清关到尾程预约，我们强调关键节点清晰、异常响应及时、交付结果可追踪。",
             value_3_title: data.config.value_3_title || "长期方案协同",
             value_3_description: data.config.value_3_description || "我们不只做单票运输，更关注客户长期补货节奏、仓配协同和整体物流成本优化。",
+            capabilities_section_title: data.config.capabilities_section_title || "我们的服务能力",
+            capabilities_section_subtitle: data.config.capabilities_section_subtitle || "相比堆数字，我们更愿意把真正能影响交付结果的能力讲清楚。",
+            capability_1_title: data.config.capability_1_title || "多运输方式协同",
+            capability_1_description: data.config.capability_1_description || "覆盖中欧班列、卡航、海运、清关与尾程派送，可根据货物属性和交付节奏组合方案。",
+            capability_2_title: data.config.capability_2_title || "欧洲链路衔接能力",
+            capability_2_description: data.config.capability_2_description || "关注目的国清关要求、送仓预约、末端派送与仓配协同，减少运输断点。",
+            capability_3_title: data.config.capability_3_title || "面向B端复杂需求",
+            capability_3_description: data.config.capability_3_description || "可支持补货、项目货、门到门交付、多批次出运等更贴近企业采购场景的物流需求。",
+            capability_4_title: data.config.capability_4_title || "方案先行而非模板报价",
+            capability_4_description: data.config.capability_4_description || "在报价前优先确认品名、时效、交付地点与清关条件，让方案更接近真实落地。",
           });
         }
       } catch (error) {
@@ -420,6 +460,55 @@ export default function SettingsAdminPage() {
                 <label className="block text-sm font-medium text-gray-700">优势卡片 4（趋势图标）</label>
                 <input type="text" value={settings.advantage_4_title} onChange={(e) => setSettings({ ...settings, advantage_4_title: e.target.value })} className="input-field" placeholder="价格优惠" />
                 <textarea value={settings.advantage_4_description} onChange={(e) => setSettings({ ...settings, advantage_4_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* About Capabilities */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">关于我们 - 服务能力说明区</h2>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块标题</label>
+              <input
+                type="text"
+                value={settings.capabilities_section_title}
+                onChange={(e) => setSettings({ ...settings, capabilities_section_title: e.target.value })}
+                className="input-field"
+                placeholder="我们的服务能力"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块副标题</label>
+              <textarea
+                value={settings.capabilities_section_subtitle}
+                onChange={(e) => setSettings({ ...settings, capabilities_section_subtitle: e.target.value })}
+                rows={2}
+                className="input-field resize-none"
+                placeholder="相比堆数字，我们更愿意把真正能影响交付结果的能力讲清楚。"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">能力卡片 1（趋势图标）</label>
+                <input type="text" value={settings.capability_1_title} onChange={(e) => setSettings({ ...settings, capability_1_title: e.target.value })} className="input-field" placeholder="多运输方式协同" />
+                <textarea value={settings.capability_1_description} onChange={(e) => setSettings({ ...settings, capability_1_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">能力卡片 2（地球图标）</label>
+                <input type="text" value={settings.capability_2_title} onChange={(e) => setSettings({ ...settings, capability_2_title: e.target.value })} className="input-field" placeholder="欧洲链路衔接能力" />
+                <textarea value={settings.capability_2_description} onChange={(e) => setSettings({ ...settings, capability_2_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">能力卡片 3（用户图标）</label>
+                <input type="text" value={settings.capability_3_title} onChange={(e) => setSettings({ ...settings, capability_3_title: e.target.value })} className="input-field" placeholder="面向B端复杂需求" />
+                <textarea value={settings.capability_3_description} onChange={(e) => setSettings({ ...settings, capability_3_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">能力卡片 4（奖章图标）</label>
+                <input type="text" value={settings.capability_4_title} onChange={(e) => setSettings({ ...settings, capability_4_title: e.target.value })} className="input-field" placeholder="方案先行而非模板报价" />
+                <textarea value={settings.capability_4_description} onChange={(e) => setSettings({ ...settings, capability_4_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
               </div>
             </div>
           </div>

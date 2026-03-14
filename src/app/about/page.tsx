@@ -14,12 +14,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig } from "@/lib/data";
 
-const stats = [
-  { icon: TrendingUp, value: "14+", label: "年行业经验" },
-  { icon: Globe, value: "30+", label: "服务国家" },
-  { icon: Users, value: "5000+", label: "合作客户" },
-  { icon: Award, value: "99%", label: "客户满意度" },
-];
+const capabilityIcons = [TrendingUp, Globe, Users, Award];
 
 interface PartnerItem {
   id?: string;
@@ -51,6 +46,28 @@ export default async function AboutPage() {
   const partnersSectionSubtitle = config.partners_section_subtitle || "与稳定可靠的合作伙伴协同，为客户提供更完整的中欧物流服务能力。";
   const partnersDisplayMode = config.partners_display_mode === "wall" ? "wall" : "card";
   const globalLogoBgStyle = config.partners_logo_bg_style === "dark" ? "dark" : config.partners_logo_bg_style === "gray" ? "gray" : "white";
+  const capabilities = [
+    {
+      icon: capabilityIcons[0],
+      title: config.capability_1_title || "多运输方式协同",
+      description: config.capability_1_description || "覆盖中欧班列、卡航、海运、清关与尾程派送，可根据货物属性和交付节奏组合方案。",
+    },
+    {
+      icon: capabilityIcons[1],
+      title: config.capability_2_title || "欧洲链路衔接能力",
+      description: config.capability_2_description || "关注目的国清关要求、送仓预约、末端派送与仓配协同，减少运输断点。",
+    },
+    {
+      icon: capabilityIcons[2],
+      title: config.capability_3_title || "面向B端复杂需求",
+      description: config.capability_3_description || "可支持补货、项目货、门到门交付、多批次出运等更贴近企业采购场景的物流需求。",
+    },
+    {
+      icon: capabilityIcons[3],
+      title: config.capability_4_title || "方案先行而非模板报价",
+      description: config.capability_4_description || "在报价前优先确认品名、时效、交付地点与清关条件，让方案更接近真实落地。",
+    },
+  ];
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -131,21 +148,27 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Capabilities */}
       <section className="py-16 bg-navy">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-serif text-white font-bold mb-4">
+              {config.capabilities_section_title || "我们的服务能力"}
+            </h2>
+            <p className="text-gray-300 max-w-3xl mx-auto">
+              {config.capabilities_section_subtitle || "相比堆数字，我们更愿意把真正能影响交付结果的能力讲清楚。"}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {capabilities.map((item, index) => {
+              const Icon = item.icon;
               return (
-                <div key={index} className="text-center">
+                <div key={index} className="text-center rounded-2xl bg-white/5 border border-white/10 p-6">
                   <div className="w-14 h-14 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Icon className="w-7 h-7 text-gold" />
                   </div>
-                  <div className="text-3xl md:text-4xl font-serif text-white font-bold mb-2">
-                    {stat.value}
-                  </div>
-                  <div className="text-gray-400">{stat.label}</div>
+                  <h3 className="text-xl font-serif text-white font-bold mb-3">{item.title}</h3>
+                  <p className="text-gray-300 text-sm leading-7">{item.description}</p>
                 </div>
               );
             })}
