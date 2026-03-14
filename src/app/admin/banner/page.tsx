@@ -87,12 +87,16 @@ export default function BannerAdminPage() {
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-navy mb-4">预览效果</h2>
           <div className="relative h-64 md:h-80 rounded-xl overflow-hidden">
-            <Image
-              src={config.banner_image || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1920"}
-              alt="Banner Preview"
-              fill
-              className="object-cover"
-            />
+            {config.banner_image ? (
+              <Image
+                src={config.banner_image}
+                alt="Banner Preview"
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy to-gold/70" />
+            )}
             <div className="absolute inset-0 bg-navy/80" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
               <h3 className="text-2xl md:text-4xl font-serif text-white font-bold mb-4">

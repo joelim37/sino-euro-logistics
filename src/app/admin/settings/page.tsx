@@ -44,6 +44,26 @@ interface SiteSettings {
   capability_3_description: string;
   capability_4_title: string;
   capability_4_description: string;
+  audience_section_title: string;
+  audience_section_subtitle: string;
+  audience_1_title: string;
+  audience_1_description: string;
+  audience_2_title: string;
+  audience_2_description: string;
+  audience_3_title: string;
+  audience_3_description: string;
+  home_faq_1_question: string;
+  home_faq_1_answer: string;
+  home_faq_2_question: string;
+  home_faq_2_answer: string;
+  home_faq_3_question: string;
+  home_faq_3_answer: string;
+  home_faq_4_question: string;
+  home_faq_4_answer: string;
+  home_cta_title: string;
+  home_cta_description: string;
+  home_cta_button_text: string;
+  home_cta_link: string;
 }
 
 const SETTINGS_KEYS = [
@@ -86,6 +106,26 @@ const SETTINGS_KEYS = [
   "capability_3_description",
   "capability_4_title",
   "capability_4_description",
+  "audience_section_title",
+  "audience_section_subtitle",
+  "audience_1_title",
+  "audience_1_description",
+  "audience_2_title",
+  "audience_2_description",
+  "audience_3_title",
+  "audience_3_description",
+  "home_faq_1_question",
+  "home_faq_1_answer",
+  "home_faq_2_question",
+  "home_faq_2_answer",
+  "home_faq_3_question",
+  "home_faq_3_answer",
+  "home_faq_4_question",
+  "home_faq_4_answer",
+  "home_cta_title",
+  "home_cta_description",
+  "home_cta_button_text",
+  "home_cta_link",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -129,6 +169,26 @@ export default function SettingsAdminPage() {
     capability_3_description: "可支持补货、项目货、门到门交付、多批次出运等更贴近企业采购场景的物流需求。",
     capability_4_title: "方案先行而非模板报价",
     capability_4_description: "在报价前优先确认品名、时效、交付地点与清关条件，让方案更接近真实落地。",
+    audience_section_title: "这套方案适合谁",
+    audience_section_subtitle: "如果你属于下面这些典型场景之一，这个站点里的服务内容基本就是为你准备的。",
+    audience_1_title: "亚马逊 / 平台仓补货客户",
+    audience_1_description: "适合关注补货节奏、入仓预约、断货风险和旺季交付稳定性的跨境电商客户。",
+    audience_2_title: "工厂直发欧洲采购客户",
+    audience_2_description: "适合需要从中国工厂出货，统一管理主程、清关和尾程交付的制造商与贸易商。",
+    audience_3_title: "项目设备 / 工程交付客户",
+    audience_3_description: "适合设备类、异形件、多批次到货和现场交付要求较高的项目型物流需求。",
+    home_faq_1_question: "送亚马逊仓和送私人地址，方案上有什么区别？",
+    home_faq_1_answer: "送仓通常更关注预约窗口、标签要求、上架时效与异常签收；送私人或商业地址则更关注尾程预约、派送范围与签收方式。发货前把收货类型说清楚，方案会更准确。",
+    home_faq_2_question: "卡航、班列、海运在旺季应该怎么选？",
+    home_faq_2_answer: "如果要保补货节奏，卡航通常更灵活；如果想在时效和成本之间做平衡，班列更稳；如果是大货备货且交期宽松，海运更有成本优势。旺季建议尽早锁定发运窗口。",
+    home_faq_3_question: "哪些货物建议先做清关资料预审？",
+    home_faq_3_answer: "高货值货物、品名复杂货物、带电/敏感属性货物、项目货以及首次出口到对应国家的货物，都建议先做资料预审，以减少清关阶段反复沟通。",
+    home_faq_4_question: "项目货和普通贸易货的运输组织差别在哪里？",
+    home_faq_4_answer: "项目货更关注尺寸重量、装卸方式、分批到货节奏、现场交接条件和节点控制，通常不能直接套用普通拼货或常规运输模板，需要先做专项方案。",
+    home_cta_title: "不确定该走班列、卡航还是海运？",
+    home_cta_description: "把货物品名、重量体积、目的地和时效要求发给我们，我们先帮你判断更合适的运输方案。",
+    home_cta_button_text: "获取方案建议",
+    home_cta_link: "/contact",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -180,6 +240,26 @@ export default function SettingsAdminPage() {
             capability_3_description: data.config.capability_3_description || "可支持补货、项目货、门到门交付、多批次出运等更贴近企业采购场景的物流需求。",
             capability_4_title: data.config.capability_4_title || "方案先行而非模板报价",
             capability_4_description: data.config.capability_4_description || "在报价前优先确认品名、时效、交付地点与清关条件，让方案更接近真实落地。",
+            audience_section_title: data.config.audience_section_title || "这套方案适合谁",
+            audience_section_subtitle: data.config.audience_section_subtitle || "如果你属于下面这些典型场景之一，这个站点里的服务内容基本就是为你准备的。",
+            audience_1_title: data.config.audience_1_title || "亚马逊 / 平台仓补货客户",
+            audience_1_description: data.config.audience_1_description || "适合关注补货节奏、入仓预约、断货风险和旺季交付稳定性的跨境电商客户。",
+            audience_2_title: data.config.audience_2_title || "工厂直发欧洲采购客户",
+            audience_2_description: data.config.audience_2_description || "适合需要从中国工厂出货，统一管理主程、清关和尾程交付的制造商与贸易商。",
+            audience_3_title: data.config.audience_3_title || "项目设备 / 工程交付客户",
+            audience_3_description: data.config.audience_3_description || "适合设备类、异形件、多批次到货和现场交付要求较高的项目型物流需求。",
+            home_faq_1_question: data.config.home_faq_1_question || "送亚马逊仓和送私人地址，方案上有什么区别？",
+            home_faq_1_answer: data.config.home_faq_1_answer || "送仓通常更关注预约窗口、标签要求、上架时效与异常签收；送私人或商业地址则更关注尾程预约、派送范围与签收方式。发货前把收货类型说清楚，方案会更准确。",
+            home_faq_2_question: data.config.home_faq_2_question || "卡航、班列、海运在旺季应该怎么选？",
+            home_faq_2_answer: data.config.home_faq_2_answer || "如果要保补货节奏，卡航通常更灵活；如果想在时效和成本之间做平衡，班列更稳；如果是大货备货且交期宽松，海运更有成本优势。旺季建议尽早锁定发运窗口。",
+            home_faq_3_question: data.config.home_faq_3_question || "哪些货物建议先做清关资料预审？",
+            home_faq_3_answer: data.config.home_faq_3_answer || "高货值货物、品名复杂货物、带电/敏感属性货物、项目货以及首次出口到对应国家的货物，都建议先做资料预审，以减少清关阶段反复沟通。",
+            home_faq_4_question: data.config.home_faq_4_question || "项目货和普通贸易货的运输组织差别在哪里？",
+            home_faq_4_answer: data.config.home_faq_4_answer || "项目货更关注尺寸重量、装卸方式、分批到货节奏、现场交接条件和节点控制，通常不能直接套用普通拼货或常规运输模板，需要先做专项方案。",
+            home_cta_title: data.config.home_cta_title || "不确定该走班列、卡航还是海运？",
+            home_cta_description: data.config.home_cta_description || "把货物品名、重量体积、目的地和时效要求发给我们，我们先帮你判断更合适的运输方案。",
+            home_cta_button_text: data.config.home_cta_button_text || "获取方案建议",
+            home_cta_link: data.config.home_cta_link || "/contact",
           });
         }
       } catch (error) {
@@ -543,6 +623,90 @@ export default function SettingsAdminPage() {
                 <label className="block text-sm font-medium text-gray-700">价值观 3（地球图标）</label>
                 <input type="text" value={settings.value_3_title} onChange={(e) => setSettings({ ...settings, value_3_title: e.target.value })} className="input-field" placeholder="长期方案协同" />
                 <textarea value={settings.value_3_description} onChange={(e) => setSettings({ ...settings, value_3_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Home Audience */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">首页 - 这套方案适合谁</h2>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块标题</label>
+              <input type="text" value={settings.audience_section_title} onChange={(e) => setSettings({ ...settings, audience_section_title: e.target.value })} className="input-field" placeholder="这套方案适合谁" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块副标题</label>
+              <textarea value={settings.audience_section_subtitle} onChange={(e) => setSettings({ ...settings, audience_section_subtitle: e.target.value })} rows={2} className="input-field resize-none" placeholder="请输入说明" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">客户类型 1</label>
+                <input type="text" value={settings.audience_1_title} onChange={(e) => setSettings({ ...settings, audience_1_title: e.target.value })} className="input-field" placeholder="亚马逊 / 平台仓补货客户" />
+                <textarea value={settings.audience_1_description} onChange={(e) => setSettings({ ...settings, audience_1_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">客户类型 2</label>
+                <input type="text" value={settings.audience_2_title} onChange={(e) => setSettings({ ...settings, audience_2_title: e.target.value })} className="input-field" placeholder="工厂直发欧洲采购客户" />
+                <textarea value={settings.audience_2_description} onChange={(e) => setSettings({ ...settings, audience_2_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">客户类型 3</label>
+                <input type="text" value={settings.audience_3_title} onChange={(e) => setSettings({ ...settings, audience_3_title: e.target.value })} className="input-field" placeholder="项目设备 / 工程交付客户" />
+                <textarea value={settings.audience_3_description} onChange={(e) => setSettings({ ...settings, audience_3_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Home FAQ */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">首页 - 常见问题 FAQ</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">问题 1</label>
+              <input type="text" value={settings.home_faq_1_question} onChange={(e) => setSettings({ ...settings, home_faq_1_question: e.target.value })} className="input-field" placeholder="请输入问题" />
+              <textarea value={settings.home_faq_1_answer} onChange={(e) => setSettings({ ...settings, home_faq_1_answer: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入答案" />
+            </div>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">问题 2</label>
+              <input type="text" value={settings.home_faq_2_question} onChange={(e) => setSettings({ ...settings, home_faq_2_question: e.target.value })} className="input-field" placeholder="请输入问题" />
+              <textarea value={settings.home_faq_2_answer} onChange={(e) => setSettings({ ...settings, home_faq_2_answer: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入答案" />
+            </div>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">问题 3</label>
+              <input type="text" value={settings.home_faq_3_question} onChange={(e) => setSettings({ ...settings, home_faq_3_question: e.target.value })} className="input-field" placeholder="请输入问题" />
+              <textarea value={settings.home_faq_3_answer} onChange={(e) => setSettings({ ...settings, home_faq_3_answer: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入答案" />
+            </div>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">问题 4</label>
+              <input type="text" value={settings.home_faq_4_question} onChange={(e) => setSettings({ ...settings, home_faq_4_question: e.target.value })} className="input-field" placeholder="请输入问题" />
+              <textarea value={settings.home_faq_4_answer} onChange={(e) => setSettings({ ...settings, home_faq_4_answer: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入答案" />
+            </div>
+          </div>
+        </div>
+
+        {/* Home CTA */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">首页 - 底部行动引导</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">标题</label>
+              <input type="text" value={settings.home_cta_title} onChange={(e) => setSettings({ ...settings, home_cta_title: e.target.value })} className="input-field" placeholder="不确定该走班列、卡航还是海运？" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">说明文案</label>
+              <textarea value={settings.home_cta_description} onChange={(e) => setSettings({ ...settings, home_cta_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入说明" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">按钮文字</label>
+                <input type="text" value={settings.home_cta_button_text} onChange={(e) => setSettings({ ...settings, home_cta_button_text: e.target.value })} className="input-field" placeholder="获取方案建议" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">按钮链接</label>
+                <input type="text" value={settings.home_cta_link} onChange={(e) => setSettings({ ...settings, home_cta_link: e.target.value })} className="input-field" placeholder="/contact" />
               </div>
             </div>
           </div>

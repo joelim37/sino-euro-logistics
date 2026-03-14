@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp } from "lucide-react";
+import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp, Package } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -21,42 +21,52 @@ const iconMap: Record<string, React.ElementType> = {
   truck: Truck,
   ship: Ship,
   "file-check": FileCheck,
+  package: Package,
+};
+
+const serviceQuickTags: Record<string, string> = {
+  "中欧班列": "时效与成本平衡",
+  "卡航快递": "适合紧急补货",
+  "海运整拼柜": "适合大货控成本",
+  "派送到门": "解决最后一公里",
+  "项目货物运输": "适合复杂交付",
+  "欧盟清关": "降低通关沟通成本",
 };
 
 // 优势图标映射（文案从后台读取）
 const advantageIcons = [Clock, Shield, Globe, TrendingUp];
 
-const faqs = [
+const defaultFaqs = [
   {
-    question: "中欧班列和卡航快递分别适合什么货物？",
-    answer: "中欧班列适合时效与成本需要平衡的常规跨境货物，卡航快递更适合时效要求更高、希望门到门交付更灵活的货物。",
+    question: "送亚马逊仓和送私人地址，方案上有什么区别？",
+    answer: "送仓通常更关注预约窗口、标签要求、上架时效与异常签收；送私人或商业地址则更关注尾程预约、派送范围与签收方式。发货前把收货类型说清楚，方案会更准确。",
   },
   {
-    question: "中欧物流通常需要多久到欧洲？",
-    answer: "具体时效取决于运输方式、目的国、清关资料完整性和尾程预约情况。铁路和卡航通常比海运更快，实际方案可根据货物类型评估。",
+    question: "卡航、班列、海运在旺季应该怎么选？",
+    answer: "如果要保补货节奏，卡航通常更灵活；如果想在时效和成本之间做平衡，班列更稳；如果是大货备货且交期宽松，海运更有成本优势。旺季建议尽早锁定发运窗口。",
   },
   {
-    question: "可以提供欧盟清关和派送到门吗？",
-    answer: "可以。中欧通联可提供中欧主程运输、欧盟清关以及欧洲尾程派送到门的一体化服务。",
+    question: "哪些货物建议先做清关资料预审？",
+    answer: "高货值货物、品名复杂货物、带电/敏感属性货物、项目货以及首次出口到对应国家的货物，都建议先做资料预审，以减少清关阶段反复沟通。",
   },
   {
-    question: "发货前需要准备哪些资料？",
-    answer: "通常需要商业发票、装箱单、品名申报信息、收发货人资料以及目标国清关所需的其他合规文件。高峰期建议提前预审。",
+    question: "项目货和普通贸易货的运输组织差别在哪里？",
+    answer: "项目货更关注尺寸重量、装卸方式、分批到货节奏、现场交接条件和节点控制，通常不能直接套用普通拼货或常规运输模板，需要先做专项方案。",
   },
 ];
 
-const targetAudience = [
+const defaultTargetAudience = [
   {
-    title: "跨境电商卖家",
-    description: "适合需要稳定补货、关注入仓时效和尾程派送效率的亚马逊、独立站或平台卖家。",
+    title: "亚马逊 / 平台仓补货客户",
+    description: "适合关注补货节奏、入仓预约、断货风险和旺季交付稳定性的跨境电商客户。",
   },
   {
-    title: "传统外贸企业",
-    description: "适合希望把中欧运输、清关与派送统一给专业团队管理的制造商与出口商。",
+    title: "工厂直发欧洲采购客户",
+    description: "适合需要从中国工厂出货，统一管理主程、清关和尾程交付的制造商与贸易商。",
   },
   {
-    title: "大宗货与项目货客户",
-    description: "适合对成本、批量出货和多节点交付有明确计划需求的企业客户。",
+    title: "项目设备 / 工程交付客户",
+    description: "适合设备类、异形件、多批次到货和现场交付要求较高的项目型物流需求。",
   },
 ];
 
@@ -67,6 +77,40 @@ export default async function HomePage() {
   const news = await getPublishedNews(homeNewsCount);
   const featuredNews = news[0];
   const secondaryNews = news.slice(1, Math.max(homeNewsCount, 3));
+  const audienceSectionTitle = config.audience_section_title || "这套方案适合谁";
+  const audienceSectionSubtitle = config.audience_section_subtitle || "如果你属于下面这些典型场景之一，这个站点里的服务内容基本就是为你准备的。";
+  const targetAudience = [
+    {
+      title: config.audience_1_title || defaultTargetAudience[0].title,
+      description: config.audience_1_description || defaultTargetAudience[0].description,
+    },
+    {
+      title: config.audience_2_title || defaultTargetAudience[1].title,
+      description: config.audience_2_description || defaultTargetAudience[1].description,
+    },
+    {
+      title: config.audience_3_title || defaultTargetAudience[2].title,
+      description: config.audience_3_description || defaultTargetAudience[2].description,
+    },
+  ];
+  const faqs = [
+    {
+      question: config.home_faq_1_question || defaultFaqs[0].question,
+      answer: config.home_faq_1_answer || defaultFaqs[0].answer,
+    },
+    {
+      question: config.home_faq_2_question || defaultFaqs[1].question,
+      answer: config.home_faq_2_answer || defaultFaqs[1].answer,
+    },
+    {
+      question: config.home_faq_3_question || defaultFaqs[2].question,
+      answer: config.home_faq_3_answer || defaultFaqs[2].answer,
+    },
+    {
+      question: config.home_faq_4_question || defaultFaqs[3].question,
+      answer: config.home_faq_4_answer || defaultFaqs[3].answer,
+    },
+  ];
   const advantages = [
     {
       icon: advantageIcons[0],
@@ -131,13 +175,17 @@ export default async function HomePage() {
       {/* Hero Banner */}
       <section className="relative h-screen flex items-center">
         <div className="absolute inset-0 z-0">
-          <Image
-            src={config.banner_image || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1920"}
-            alt="Hero Background"
-            fill
-            className="object-cover"
-            priority
-          />
+          {config.banner_image ? (
+            <Image
+              src={config.banner_image}
+              alt="Hero Background"
+              fill
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-navy via-navy to-gold/70" />
+          )}
           <div className="absolute inset-0 bg-navy/80" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -184,6 +232,9 @@ export default async function HomePage() {
                   <h3 className="text-xl font-serif text-navy font-bold mb-2">
                     {service.name}
                   </h3>
+                  <div className="inline-flex items-center rounded-full bg-gold/10 px-3 py-1 text-xs text-navy mb-3">
+                    {serviceQuickTags[service.name] || "一站式中欧物流方案"}
+                  </div>
                   <p className="text-gray-600 mb-4">{service.description}</p>
                   <div className="flex items-center text-gold text-sm font-medium">
                     <span>了解更多</span>
@@ -330,8 +381,8 @@ export default async function HomePage() {
       <section className="py-20 bg-bg border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-serif text-navy font-bold mb-4">这套方案适合谁</h2>
-            <p className="text-gray-600 max-w-3xl mx-auto">如果你属于下面这些典型场景之一，这个站点里的服务内容基本就是为你准备的。</p>
+            <h2 className="text-3xl md:text-4xl font-serif text-navy font-bold mb-4">{audienceSectionTitle}</h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">{audienceSectionSubtitle}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {targetAudience.map((item) => (
@@ -366,13 +417,13 @@ export default async function HomePage() {
       <section className="py-20 bg-navy">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-serif text-white font-bold mb-4">
-            准备好开始了吗？
+            {config.home_cta_title || "不确定该走班列、卡航还是海运？"}
           </h2>
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-            立即联系我们，获取专业的中欧物流解决方案报价
+            {config.home_cta_description || "把货物品名、重量体积、目的地和时效要求发给我们，我们先帮你判断更合适的运输方案。"}
           </p>
-          <Link href="/contact" className="btn-primary">
-            立即咨询
+          <Link href={config.home_cta_link || "/contact"} className="btn-primary">
+            {config.home_cta_button_text || "获取方案建议"}
           </Link>
         </div>
       </section>
