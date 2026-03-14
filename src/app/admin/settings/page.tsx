@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save, Loader2 } from "lucide-react";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 interface SiteSettings {
   company_name: string;
@@ -12,6 +13,7 @@ interface SiteSettings {
   company_whatsapp: string;
   company_address: string;
   about_content: string;
+  about_image: string;
   footer_content: string;
   home_news_count: string;
   home_news_rule: string;
@@ -43,6 +45,7 @@ const SETTINGS_KEYS = [
   "company_whatsapp",
   "company_address",
   "about_content",
+  "about_image",
   "footer_content",
   "home_news_count",
   "home_news_rule",
@@ -75,6 +78,7 @@ export default function SettingsAdminPage() {
     company_whatsapp: "",
     company_address: "",
     about_content: "",
+    about_image: "",
     footer_content: "",
     home_news_count: "3",
     home_news_rule: "top_then_fresh",
@@ -115,6 +119,7 @@ export default function SettingsAdminPage() {
             company_whatsapp: data.config.company_whatsapp || "",
             company_address: data.config.company_address || "",
             about_content: data.config.about_content || "",
+            about_image: data.config.about_image || "",
             footer_content: data.config.footer_content || "",
             home_news_count: data.config.home_news_count || "3",
             home_news_rule: data.config.home_news_rule || "top_then_fresh",
@@ -304,19 +309,28 @@ export default function SettingsAdminPage() {
         {/* About Content */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-navy mb-6">关于我们</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              公司简介
-            </label>
-            <textarea
-              value={settings.about_content}
-              onChange={(e) =>
-                setSettings({ ...settings, about_content: e.target.value })
-              }
-              rows={6}
-              className="input-field resize-none"
-              placeholder="请输入公司简介内容..."
+          <div className="space-y-6">
+            <ImageUploadField
+              label="关于我们配图"
+              value={settings.about_image}
+              onChange={(value) => setSettings({ ...settings, about_image: value })}
+              folder="media-library"
+              hint="建议上传真实办公室、仓库、团队或物流现场图片；不传则前台显示品牌占位样式"
             />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                公司简介
+              </label>
+              <textarea
+                value={settings.about_content}
+                onChange={(e) =>
+                  setSettings({ ...settings, about_content: e.target.value })
+                }
+                rows={6}
+                className="input-field resize-none"
+                placeholder="请输入公司简介内容..."
+              />
+            </div>
           </div>
         </div>
 

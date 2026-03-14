@@ -87,12 +87,24 @@ export default async function AboutPage() {
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <div className="w-full lg:w-1/2">
               <div className="relative h-80 md:h-96 rounded-2xl overflow-hidden shadow-xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800"
-                  alt="公司办公室"
-                  fill
-                  className="object-cover"
-                />
+                {config.about_image ? (
+                  <Image
+                    src={config.about_image}
+                    alt="关于我们配图"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-navy via-navy to-gold/80 flex items-center justify-center">
+                    <div className="text-center text-white px-8">
+                      <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <span className="text-3xl font-bold">SE</span>
+                      </div>
+                      <p className="text-2xl md:text-3xl font-serif font-bold mb-3">Sino Euro Logistics</p>
+                      <p className="text-white/80 text-sm md:text-base">建议在后台上传真实办公室、仓库、团队或物流现场图片，提升可信度。</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="w-full lg:w-1/2">
