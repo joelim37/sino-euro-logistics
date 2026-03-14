@@ -23,29 +23,8 @@ const iconMap: Record<string, React.ElementType> = {
   "file-check": FileCheck,
 };
 
-// 优势列表
-const advantages = [
-  {
-    icon: Clock,
-    title: "时效保证",
-    description: "14年丰富经验，专业团队操作，确保货物安全准时到达",
-  },
-  {
-    icon: Shield,
-    title: "安全保障",
-    description: "全程货物追踪，专业保险服务，让您安心托付",
-  },
-  {
-    icon: Globe,
-    title: "网络覆盖",
-    description: "欧洲全境派送网络，覆盖30+国家，，门到门服务",
-  },
-  {
-    icon: TrendingUp,
-    title: "价格优惠",
-    description: "一手庄家价格，无中间商赚差价，性价比更高",
-  },
-];
+// 优势图标映射（文案从后台读取）
+const advantageIcons = [Clock, Shield, Globe, TrendingUp];
 
 const faqs = [
   {
@@ -88,6 +67,28 @@ export default async function HomePage() {
   const news = await getPublishedNews(homeNewsCount);
   const featuredNews = news[0];
   const secondaryNews = news.slice(1, Math.max(homeNewsCount, 3));
+  const advantages = [
+    {
+      icon: advantageIcons[0],
+      title: config.advantage_1_title || "时效保证",
+      description: config.advantage_1_description || "14年丰富经验，专业团队操作，确保货物安全准时到达",
+    },
+    {
+      icon: advantageIcons[1],
+      title: config.advantage_2_title || "安全保障",
+      description: config.advantage_2_description || "全程货物追踪，专业保险服务，让您安心托付",
+    },
+    {
+      icon: advantageIcons[2],
+      title: config.advantage_3_title || "网络覆盖",
+      description: config.advantage_3_description || "欧洲全境派送网络，覆盖30+国家，门到门服务",
+    },
+    {
+      icon: advantageIcons[3],
+      title: config.advantage_4_title || "价格优惠",
+      description: config.advantage_4_description || "一手庄家价格，无中间商赚差价，性价比更高",
+    },
+  ];
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -202,10 +203,10 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif text-navy font-bold mb-4">
-              为什么选择我们
+              {config.advantages_section_title || "为什么选择我们"}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              14年行业经验，值得信赖的物流合作伙伴
+              {config.advantages_section_subtitle || "14年行业经验，值得信赖的物流合作伙伴"}
             </p>
           </div>
 

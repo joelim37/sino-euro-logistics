@@ -15,6 +15,16 @@ interface SiteSettings {
   footer_content: string;
   home_news_count: string;
   home_news_rule: string;
+  advantages_section_title: string;
+  advantages_section_subtitle: string;
+  advantage_1_title: string;
+  advantage_1_description: string;
+  advantage_2_title: string;
+  advantage_2_description: string;
+  advantage_3_title: string;
+  advantage_3_description: string;
+  advantage_4_title: string;
+  advantage_4_description: string;
 }
 
 const SETTINGS_KEYS = [
@@ -29,6 +39,16 @@ const SETTINGS_KEYS = [
   "footer_content",
   "home_news_count",
   "home_news_rule",
+  "advantages_section_title",
+  "advantages_section_subtitle",
+  "advantage_1_title",
+  "advantage_1_description",
+  "advantage_2_title",
+  "advantage_2_description",
+  "advantage_3_title",
+  "advantage_3_description",
+  "advantage_4_title",
+  "advantage_4_description",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -44,6 +64,16 @@ export default function SettingsAdminPage() {
     footer_content: "",
     home_news_count: "3",
     home_news_rule: "top_then_fresh",
+    advantages_section_title: "为什么选择我们",
+    advantages_section_subtitle: "14年行业经验，值得信赖的物流合作伙伴",
+    advantage_1_title: "时效保证",
+    advantage_1_description: "14年丰富经验，专业团队操作，确保货物安全准时到达",
+    advantage_2_title: "安全保障",
+    advantage_2_description: "全程货物追踪，专业保险服务，让您安心托付",
+    advantage_3_title: "网络覆盖",
+    advantage_3_description: "欧洲全境派送网络，覆盖30+国家，门到门服务",
+    advantage_4_title: "价格优惠",
+    advantage_4_description: "一手庄家价格，无中间商赚差价，性价比更高",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -67,6 +97,16 @@ export default function SettingsAdminPage() {
             footer_content: data.config.footer_content || "",
             home_news_count: data.config.home_news_count || "3",
             home_news_rule: data.config.home_news_rule || "top_then_fresh",
+            advantages_section_title: data.config.advantages_section_title || "为什么选择我们",
+            advantages_section_subtitle: data.config.advantages_section_subtitle || "14年行业经验，值得信赖的物流合作伙伴",
+            advantage_1_title: data.config.advantage_1_title || "时效保证",
+            advantage_1_description: data.config.advantage_1_description || "14年丰富经验，专业团队操作，确保货物安全准时到达",
+            advantage_2_title: data.config.advantage_2_title || "安全保障",
+            advantage_2_description: data.config.advantage_2_description || "全程货物追踪，专业保险服务，让您安心托付",
+            advantage_3_title: data.config.advantage_3_title || "网络覆盖",
+            advantage_3_description: data.config.advantage_3_description || "欧洲全境派送网络，覆盖30+国家，门到门服务",
+            advantage_4_title: data.config.advantage_4_title || "价格优惠",
+            advantage_4_description: data.config.advantage_4_description || "一手庄家价格，无中间商赚差价，性价比更高",
           });
         }
       } catch (error) {
@@ -289,6 +329,55 @@ export default function SettingsAdminPage() {
                   <div className="text-sm font-medium text-gray-800">只按发布时间</div>
                   <div className="text-xs text-gray-500 mt-1">忽略置顶顺序，最新发布的新闻优先</div>
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Advantages */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">首页 - 为什么选择我们</h2>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块标题</label>
+              <input
+                type="text"
+                value={settings.advantages_section_title}
+                onChange={(e) => setSettings({ ...settings, advantages_section_title: e.target.value })}
+                className="input-field"
+                placeholder="为什么选择我们"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块副标题</label>
+              <textarea
+                value={settings.advantages_section_subtitle}
+                onChange={(e) => setSettings({ ...settings, advantages_section_subtitle: e.target.value })}
+                rows={2}
+                className="input-field resize-none"
+                placeholder="14年行业经验，值得信赖的物流合作伙伴"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">优势卡片 1（时钟图标）</label>
+                <input type="text" value={settings.advantage_1_title} onChange={(e) => setSettings({ ...settings, advantage_1_title: e.target.value })} className="input-field" placeholder="时效保证" />
+                <textarea value={settings.advantage_1_description} onChange={(e) => setSettings({ ...settings, advantage_1_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">优势卡片 2（盾牌图标）</label>
+                <input type="text" value={settings.advantage_2_title} onChange={(e) => setSettings({ ...settings, advantage_2_title: e.target.value })} className="input-field" placeholder="安全保障" />
+                <textarea value={settings.advantage_2_description} onChange={(e) => setSettings({ ...settings, advantage_2_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">优势卡片 3（地球图标）</label>
+                <input type="text" value={settings.advantage_3_title} onChange={(e) => setSettings({ ...settings, advantage_3_title: e.target.value })} className="input-field" placeholder="网络覆盖" />
+                <textarea value={settings.advantage_3_description} onChange={(e) => setSettings({ ...settings, advantage_3_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">优势卡片 4（趋势图标）</label>
+                <input type="text" value={settings.advantage_4_title} onChange={(e) => setSettings({ ...settings, advantage_4_title: e.target.value })} className="input-field" placeholder="价格优惠" />
+                <textarea value={settings.advantage_4_description} onChange={(e) => setSettings({ ...settings, advantage_4_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入描述" />
               </div>
             </div>
           </div>
