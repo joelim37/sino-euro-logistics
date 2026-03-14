@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Train, Truck, Ship, FileCheck } from "lucide-react";
+import { Train, Truck, Ship, FileCheck, Package } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "服务项目",
-  description: "查看中欧通联的中欧班列、卡航快递、海运整拼柜、欧盟清关等服务项目，了解适合货物、参考时效与运输方案。",
+  description: "查看中欧通联的中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输、欧盟清关等服务项目，了解适合货物、参考时效与运输方案。",
   alternates: { canonical: "/services" },
 };
 import Navbar from "@/components/layout/Navbar";
@@ -19,7 +19,69 @@ const iconMap: Record<string, React.ElementType> = {
   truck: Truck,
   ship: Ship,
   "file-check": FileCheck,
+  package: Package,
 };
+
+const serviceScenarios: Record<string, string[]> = {
+  "中欧班列": [
+    "适合有稳定月度/周度出货计划，希望在时效与成本之间取得平衡的外贸企业。",
+    "适合机械配件、家居建材、普通工业品、汽车零部件等较重或批量较大的常规货物。",
+    "适合需要覆盖欧洲内陆国家、希望链路稳定且便于长期签约合作的B端客户。",
+  ],
+  "卡航快递": [
+    "适合跨境电商卖家在促销季、断货补仓、紧急补货时使用，对交付窗口更敏感。",
+    "适合服饰、3C配件、小家电、美妆个护、轻抛货等对时效和末端灵活性要求较高的货物。",
+    "适合希望减少中转等待、强调门到门衔接效率和可控交仓节奏的客户。",
+  ],
+  "海运整拼柜": [
+    "适合大批量出货、对单公斤物流成本敏感、交付周期相对宽松的贸易商与工厂客户。",
+    "适合家具、建材、日用品、低货值大体积货物及整批备货型订单。",
+    "适合提前规划补货节奏、愿意以更长运输周期换取更优综合成本的项目。",
+  ],
+  "派送到门": [
+    "适合没有欧洲本地物流团队、希望从起运到最终签收由同一服务商统筹的客户。",
+    "适合送仓、送门店、送办公室、送工地等多类型收货地址，强调预约、签收和异常反馈。",
+    "适合需要降低沟通链条、减少主程与尾程分包衔接风险的跨境卖家与企业买家。",
+  ],
+  "项目货物运输": [
+    "适合设备搬迁、工程建设、生产线配套、展会布展等一次性或阶段性交付项目。",
+    "适合超尺寸、超重件、异形设备、多批次联动到货等需要专项方案设计的货物。",
+    "适合对装卸、加固、分批发运、现场交接和节点控制有更高要求的企业客户。",
+  ],
+};
+
+const fallbackScenarios = [
+  "适合需要稳定跨境运输链路的外贸企业。",
+  "适合关注欧洲时效、清关与交付协同的跨境客户。",
+  "适合希望把主程、清关、尾程统一管理的货主。",
+];
+
+const supplementalServices = [
+  {
+    id: "supplemental-door-delivery",
+    name: "派送到门",
+    slug: "door-delivery",
+    description: "提供欧洲尾程预约、派送签收、仓库/门店/工地交付等到门服务，打通最后一公里。",
+    content:
+      "针对欧洲仓库、商业地址、门店与项目现场，提供预约、签收、异常反馈与回单跟踪等尾程交付支持，帮助客户把主程运输真正闭环到收货端。",
+    icon: "truck",
+    image: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=800",
+    transit_time: "按目的国与预约时段而定",
+    suitable_for: "需送仓 / 送门店 / 送办公室 / 送工地的货物",
+  },
+  {
+    id: "supplemental-project-cargo",
+    name: "项目货物运输",
+    slug: "project-cargo-transport",
+    description: "面向工程设备、展会物资、生产线与大件项目货，提供专项运输组织与节点管理。",
+    content:
+      "围绕设备尺寸、装卸条件、目的地限制与交付时间表，定制项目运输方案，可协调分批发运、现场交接、加固包装与多节点运输执行。",
+    icon: "package",
+    image: "https://images.unsplash.com/photo-1494412651409-8963ce7935a7?w=800",
+    transit_time: "按项目方案评估",
+    suitable_for: "工程设备 / 大件异形件 / 展会物资 / 生产线项目",
+  },
+];
 
 const serviceFaqs = [
   {
@@ -63,10 +125,11 @@ const serviceComparisons = [
 export default async function ServicesPage() {
   const config = await getSiteConfig();
   const services = await getServices();
+  const mergedServices = [...services, ...supplementalServices];
   const servicesJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    itemListElement: services.map((service, index) => ({
+    itemListElement: mergedServices.map((service, index) => ({
       "@type": "ListItem",
       position: index + 1,
       name: service.name,
@@ -118,9 +181,10 @@ export default async function ServicesPage() {
       <section className="py-20 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-16">
-            {services.map((service, index) => {
+            {mergedServices.map((service, index) => {
               const Icon = iconMap[service.icon] || Train;
               const isEven = index % 2 === 0;
+              const scenarios = serviceScenarios[service.name] || fallbackScenarios;
 
               return (
                 <div
@@ -170,9 +234,9 @@ export default async function ServicesPage() {
                     <div className="rounded-2xl bg-white border border-gray-100 p-5 mb-6 space-y-3">
                       <h3 className="text-base font-semibold text-navy">适用场景</h3>
                       <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
-                        <li>需要稳定跨境运输链路的外贸企业</li>
-                        <li>关注欧洲时效与清关协同的跨境卖家</li>
-                        <li>希望把主程、清关、尾程统一管理的货主</li>
+                        {scenarios.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
                       </ul>
                     </div>
 

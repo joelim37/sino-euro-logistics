@@ -8,6 +8,8 @@ const serviceTypes = [
   { value: "中欧班列", label: "中欧班列" },
   { value: "卡航快递", label: "卡航快递" },
   { value: "海运整拼柜", label: "海运整拼柜" },
+  { value: "派送到门", label: "派送到门" },
+  { value: "项目货物运输", label: "项目货物运输" },
   { value: "欧盟清关", label: "欧盟清关" },
   { value: "其他", label: "其他" },
 ];

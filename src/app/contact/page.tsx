@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "联系我们",
-  description: "联系中欧通联国际物流，获取中欧班列、卡航快递、海运整拼柜、欧盟清关与尾程派送方案报价。",
+  description: "联系中欧通联国际物流，获取中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关方案报价。",
   alternates: { canonical: "/contact" },
 };
 

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "中欧物流一站式解决方案",
-  description: "中欧通联提供中欧班列、卡航快递、海运整拼柜、欧盟清关与派送到门服务，覆盖欧洲多国，适合跨境卖家与外贸企业。",
+  description: "中欧通联提供中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关服务，覆盖欧洲多国，适合跨境卖家与外贸企业。",
   alternates: { canonical: "/" },
 };
 import Navbar from "@/components/layout/Navbar";
