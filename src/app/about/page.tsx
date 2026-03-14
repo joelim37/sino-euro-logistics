@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Award, Users, Globe, TrendingUp } from "lucide-react";
+import Link from "next/link";
+import { Award, Users, Globe, TrendingUp, Handshake } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -20,15 +21,25 @@ const stats = [
   { icon: Award, value: "99%", label: "客户满意度" },
 ];
 
-const certifications = [
-  { name: "ISO 9001质量管理体系认证", image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400" },
-  { name: "AEO高级认证企业", image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400" },
-  { name: "中国货代物流企业50强", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400" },
-  { name: "欧盟清关资质", image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400" },
-];
+interface PartnerItem {
+  id?: string;
+  name: string;
+  logo: string;
+  website?: string;
+  linkEnabled?: boolean;
+}
 
 export default async function AboutPage() {
   const config = await getSiteConfig();
+  let partners: PartnerItem[] = [];
+  try {
+    partners = config.partners_items ? JSON.parse(config.partners_items) : [];
+    if (!Array.isArray(partners)) partners = [];
+  } catch {
+    partners = [];
+  }
+  const partnersSectionTitle = config.partners_section_title || "合作伙伴";
+  const partnersSectionSubtitle = config.partners_section_subtitle || "与稳定可靠的合作伙伴协同，为客户提供更完整的中欧物流服务能力。";
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -119,37 +130,56 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Certifications */}
+      {/* Partners */}
       <section className="py-20 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
+            <div className="w-14 h-14 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Handshake className="w-7 h-7 text-gold" />
+            </div>
             <h2 className="text-3xl font-serif text-navy font-bold mb-4">
-              资质认证
+              {partnersSectionTitle}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              权威资质认证，品质保障
+              {partnersSectionSubtitle}
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {certifications.map((cert, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow"
-              >
-                <div className="relative h-40">
-                  <Image
-                    src={cert.image}
-                    alt={cert.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-4 text-center">
-                  <p className="text-navy font-medium text-sm">{cert.name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+
+          {partners.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-500">
+              暂未配置合作伙伴展示内容
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {partners.map((partner) => {
+                const card = (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6 h-full flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative w-full h-20 mb-4">
+                      {partner.logo ? (
+                        <Image src={partner.logo} alt={partner.name} fill className="object-contain" />
+                      ) : (
+                        <div className="w-full h-full rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+                          暂无 Logo
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-navy font-medium text-sm leading-6">{partner.name}</p>
+                    {partner.linkEnabled && partner.website ? (
+                      <span className="mt-2 text-xs text-gold">查看合作伙伴官网</span>
+                    ) : null}
+                  </div>
+                );
+
+                return partner.linkEnabled && partner.website ? (
+                  <Link key={partner.id || partner.name} href={partner.website} target="_blank" rel="noopener noreferrer" className="block">
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={partner.id || partner.name}>{card}</div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 

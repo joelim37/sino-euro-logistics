@@ -11,12 +11,14 @@ import {
   LogOut,
   Menu,
   X,
+  Handshake,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { href: "/admin/banner", label: "Banner管理", icon: Image },
   { href: "/admin/services", label: "服务管理", icon: Package },
+  { href: "/admin/partners", label: "合作伙伴", icon: Handshake },
   { href: "/admin/news", label: "新闻管理", icon: MessageSquare },
   { href: "/admin/media", label: "媒体库", icon: Image },
   { href: "/admin/inquiries", label: "询价记录", icon: MessageSquare },
