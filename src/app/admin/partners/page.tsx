@@ -10,6 +10,7 @@ interface PartnerItem {
   logo: string;
   website: string;
   linkEnabled: boolean;
+  isVisible: boolean;
   bgStyle: "white" | "gray" | "dark";
 }
 
@@ -28,6 +29,7 @@ function createPartner(): PartnerItem {
     logo: "",
     website: "",
     linkEnabled: false,
+    isVisible: true,
     bgStyle: "white",
   };
 }
@@ -59,7 +61,7 @@ export default function PartnersAdminPage() {
         if (config.partners_items) {
           try {
             const parsed = JSON.parse(config.partners_items);
-            setPartners(Array.isArray(parsed) ? parsed.map((item) => ({ ...item, bgStyle: item.bgStyle || "white" })) : []);
+            setPartners(Array.isArray(parsed) ? parsed.map((item) => ({ ...item, bgStyle: item.bgStyle || "white", isVisible: item.isVisible !== false })) : []);
           } catch {
             setPartners([]);
           }
@@ -228,6 +230,15 @@ export default function PartnersAdminPage() {
                       placeholder="https://example.com"
                     />
                   </div>
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={partner.isVisible}
+                      onChange={(e) => updatePartner(partner.id, { isVisible: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    前台显示该合作伙伴
+                  </label>
                   <label className="flex items-center gap-2 text-sm text-gray-700">
                     <input
                       type="checkbox"

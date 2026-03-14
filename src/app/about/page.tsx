@@ -27,6 +27,7 @@ interface PartnerItem {
   logo: string;
   website?: string;
   linkEnabled?: boolean;
+  isVisible?: boolean;
   bgStyle?: "white" | "gray" | "dark";
 }
 
@@ -45,6 +46,7 @@ export default async function AboutPage() {
   } catch {
     partners = [];
   }
+  partners = partners.filter((partner) => partner?.isVisible !== false);
   const partnersSectionTitle = config.partners_section_title || "合作伙伴";
   const partnersSectionSubtitle = config.partners_section_subtitle || "与稳定可靠的合作伙伴协同，为客户提供更完整的中欧物流服务能力。";
   const partnersDisplayMode = config.partners_display_mode === "wall" ? "wall" : "card";
@@ -225,7 +227,7 @@ export default async function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-serif text-navy font-bold mb-4">
-              核心价值观
+              {config.values_section_title || "核心价值观"}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -233,27 +235,27 @@ export default async function AboutPage() {
               <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-gold" />
               </div>
-              <h3 className="text-xl font-serif text-navy font-bold mb-2">客户至上</h3>
+              <h3 className="text-xl font-serif text-navy font-bold mb-2">{config.value_1_title || "线路理解优先"}</h3>
               <p className="text-gray-600">
-                始终以客户需求为导向，提供个性化的物流解决方案
+                {config.value_1_description || "我们重视的不只是发货，而是对中欧线路、口岸节奏、清关要求和末端交付条件的真实理解。"}
               </p>
             </div>
             <div className="text-center p-8 rounded-xl bg-bg">
               <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="w-8 h-8 text-gold" />
               </div>
-              <h3 className="text-xl font-serif text-navy font-bold mb-2">追求卓越</h3>
+              <h3 className="text-xl font-serif text-navy font-bold mb-2">{config.value_2_title || "节点可控交付"}</h3>
               <p className="text-gray-600">
-                持续优化服务流程，不断提升服务质量
+                {config.value_2_description || "从提货、主程、清关到尾程预约，我们强调关键节点清晰、异常响应及时、交付结果可追踪。"}
               </p>
             </div>
             <div className="text-center p-8 rounded-xl bg-bg">
               <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Globe className="w-8 h-8 text-gold" />
               </div>
-              <h3 className="text-xl font-serif text-navy font-bold mb-2">合作共赢</h3>
+              <h3 className="text-xl font-serif text-navy font-bold mb-2">{config.value_3_title || "长期方案协同"}</h3>
               <p className="text-gray-600">
-                与客户、合作伙伴共同成长，实现互利共赢
+                {config.value_3_description || "我们不只做单票运输，更关注客户长期补货节奏、仓配协同和整体物流成本优化。"}
               </p>
             </div>
           </div>

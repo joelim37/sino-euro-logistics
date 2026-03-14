@@ -25,6 +25,13 @@ interface SiteSettings {
   advantage_3_description: string;
   advantage_4_title: string;
   advantage_4_description: string;
+  values_section_title: string;
+  value_1_title: string;
+  value_1_description: string;
+  value_2_title: string;
+  value_2_description: string;
+  value_3_title: string;
+  value_3_description: string;
 }
 
 const SETTINGS_KEYS = [
@@ -49,6 +56,13 @@ const SETTINGS_KEYS = [
   "advantage_3_description",
   "advantage_4_title",
   "advantage_4_description",
+  "values_section_title",
+  "value_1_title",
+  "value_1_description",
+  "value_2_title",
+  "value_2_description",
+  "value_3_title",
+  "value_3_description",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -74,6 +88,13 @@ export default function SettingsAdminPage() {
     advantage_3_description: "欧洲全境派送网络，覆盖30+国家，门到门服务",
     advantage_4_title: "价格优惠",
     advantage_4_description: "一手庄家价格，无中间商赚差价，性价比更高",
+    values_section_title: "核心价值观",
+    value_1_title: "线路理解优先",
+    value_1_description: "我们重视的不只是发货，而是对中欧线路、口岸节奏、清关要求和末端交付条件的真实理解。",
+    value_2_title: "节点可控交付",
+    value_2_description: "从提货、主程、清关到尾程预约，我们强调关键节点清晰、异常响应及时、交付结果可追踪。",
+    value_3_title: "长期方案协同",
+    value_3_description: "我们不只做单票运输，更关注客户长期补货节奏、仓配协同和整体物流成本优化。",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,6 +128,13 @@ export default function SettingsAdminPage() {
             advantage_3_description: data.config.advantage_3_description || "欧洲全境派送网络，覆盖30+国家，门到门服务",
             advantage_4_title: data.config.advantage_4_title || "价格优惠",
             advantage_4_description: data.config.advantage_4_description || "一手庄家价格，无中间商赚差价，性价比更高",
+            values_section_title: data.config.values_section_title || "核心价值观",
+            value_1_title: data.config.value_1_title || "线路理解优先",
+            value_1_description: data.config.value_1_description || "我们重视的不只是发货，而是对中欧线路、口岸节奏、清关要求和末端交付条件的真实理解。",
+            value_2_title: data.config.value_2_title || "节点可控交付",
+            value_2_description: data.config.value_2_description || "从提货、主程、清关到尾程预约，我们强调关键节点清晰、异常响应及时、交付结果可追踪。",
+            value_3_title: data.config.value_3_title || "长期方案协同",
+            value_3_description: data.config.value_3_description || "我们不只做单票运输，更关注客户长期补货节奏、仓配协同和整体物流成本优化。",
           });
         }
       } catch (error) {
@@ -378,6 +406,40 @@ export default function SettingsAdminPage() {
                 <label className="block text-sm font-medium text-gray-700">优势卡片 4（趋势图标）</label>
                 <input type="text" value={settings.advantage_4_title} onChange={(e) => setSettings({ ...settings, advantage_4_title: e.target.value })} className="input-field" placeholder="价格优惠" />
                 <textarea value={settings.advantage_4_description} onChange={(e) => setSettings({ ...settings, advantage_4_description: e.target.value })} rows={3} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* About Values */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">关于我们 - 核心价值观</h2>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">区块标题</label>
+              <input
+                type="text"
+                value={settings.values_section_title}
+                onChange={(e) => setSettings({ ...settings, values_section_title: e.target.value })}
+                className="input-field"
+                placeholder="核心价值观"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">价值观 1（用户图标）</label>
+                <input type="text" value={settings.value_1_title} onChange={(e) => setSettings({ ...settings, value_1_title: e.target.value })} className="input-field" placeholder="线路理解优先" />
+                <textarea value={settings.value_1_description} onChange={(e) => setSettings({ ...settings, value_1_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">价值观 2（趋势图标）</label>
+                <input type="text" value={settings.value_2_title} onChange={(e) => setSettings({ ...settings, value_2_title: e.target.value })} className="input-field" placeholder="节点可控交付" />
+                <textarea value={settings.value_2_description} onChange={(e) => setSettings({ ...settings, value_2_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
+              </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">价值观 3（地球图标）</label>
+                <input type="text" value={settings.value_3_title} onChange={(e) => setSettings({ ...settings, value_3_title: e.target.value })} className="input-field" placeholder="长期方案协同" />
+                <textarea value={settings.value_3_description} onChange={(e) => setSettings({ ...settings, value_3_description: e.target.value })} rows={4} className="input-field resize-none" placeholder="请输入描述" />
               </div>
             </div>
           </div>
