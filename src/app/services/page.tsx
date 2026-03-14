@@ -56,6 +56,24 @@ const fallbackScenarios = [
   "适合希望把主程、清关、尾程统一管理的货主。",
 ];
 
+const serviceAdvantages: Record<string, string[]> = {
+  "中欧班列": ["时效与成本更均衡", "适合中大批量稳定出货", "欧洲内陆覆盖能力强"],
+  "卡航快递": ["交付节奏更灵活", "适合补货与紧急订单", "门到门协同更顺畅"],
+  "海运整拼柜": ["大货运输成本优势明显", "适合低货值大体积货物", "更适合计划性备货"],
+  "派送到门": ["可预约送仓送门", "支持签收回单与异常反馈", "降低尾程对接成本"],
+  "项目货物运输": ["支持定制化运输方案", "适配超长超重异形货", "强调节点控制与现场交接"],
+  "欧盟清关": ["资料预审更高效", "降低通关沟通成本", "便于与主程和尾程联动"],
+};
+
+const serviceProcess: Record<string, string[]> = {
+  "中欧班列": ["确认品名、件重体积与时效要求", "匹配班列班次并安排集货装柜", "完成清关与欧洲末端交付"],
+  "卡航快递": ["确认补货窗口与交付节点", "安排提货、干线卡航与在途追踪", "完成清关后快速尾程派送"],
+  "海运整拼柜": ["核算体积重量与柜型需求", "安排拼柜/整柜订舱与装运计划", "到港清关后衔接提柜与派送"],
+  "派送到门": ["确认收货地址与预约要求", "匹配车辆/尾程资源并预约交付", "完成签收反馈与异常闭环"],
+  "项目货物运输": ["评估尺寸、重量、吊装与路线条件", "制定分批运输与现场交接方案", "按项目节点执行运输、签收与复盘"],
+  "欧盟清关": ["预审发票、装箱单与申报资料", "匹配目的国清关要求与税务路径", "放行后衔接仓储或尾程派送"],
+};
+
 const supplementalServices = [
   {
     id: "supplemental-door-delivery",
@@ -90,7 +108,15 @@ const serviceFaqs = [
   },
   {
     question: "可以提供清关和尾程派送吗？",
-    answer: "可以。我们可根据货物类型与目的国要求，提供主程运输、欧盟清关、尾程派送到门的一体化方案。",
+    answer: "可以。我们可根据货物类型、目的国要求和收货地址，提供主程运输、欧盟清关、尾程派送到门的一体化方案。",
+  },
+  {
+    question: "项目货物运输一般要提前准备什么？",
+    answer: "建议提前提供设备名称、尺寸重量、包装方式、装卸条件、交付地点限制以及项目时间表。对于超尺寸或需吊装货物，越早评估越能降低执行风险。",
+  },
+  {
+    question: "派送到门可以送到仓库、门店或工地吗？",
+    answer: "通常可以。我们会根据目的地类型、预约要求、车辆限制和签收方式安排合适的尾程资源，并提前确认交付窗口。",
   },
   {
     question: "发货前最需要确认什么？",
@@ -126,10 +152,11 @@ export default async function ServicesPage() {
   const config = await getSiteConfig();
   const services = await getServices();
   const mergedServices = [...services, ...supplementalServices];
+  const uniqueServices = Array.from(new Map(mergedServices.map((service) => [service.slug, service])).values());
   const servicesJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    itemListElement: mergedServices.map((service, index) => ({
+    itemListElement: uniqueServices.map((service, index) => ({
       "@type": "ListItem",
       position: index + 1,
       name: service.name,
@@ -181,10 +208,12 @@ export default async function ServicesPage() {
       <section className="py-20 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-16">
-            {mergedServices.map((service, index) => {
+            {uniqueServices.map((service, index) => {
               const Icon = iconMap[service.icon] || Train;
               const isEven = index % 2 === 0;
               const scenarios = serviceScenarios[service.name] || fallbackScenarios;
+              const advantages = serviceAdvantages[service.name] || [];
+              const processSteps = serviceProcess[service.name] || [];
 
               return (
                 <div
@@ -231,7 +260,7 @@ export default async function ServicesPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl bg-white border border-gray-100 p-5 mb-6 space-y-3">
+                    <div className="rounded-2xl bg-white border border-gray-100 p-5 mb-5 space-y-3">
                       <h3 className="text-base font-semibold text-navy">适用场景</h3>
                       <ul className="text-sm text-gray-600 space-y-2 list-disc pl-5">
                         {scenarios.map((item) => (
@@ -239,6 +268,30 @@ export default async function ServicesPage() {
                         ))}
                       </ul>
                     </div>
+
+                    {advantages.length > 0 && (
+                      <div className="rounded-2xl bg-white border border-gray-100 p-5 mb-5 space-y-3">
+                        <h3 className="text-base font-semibold text-navy">服务优势</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {advantages.map((item) => (
+                            <span key={item} className="inline-flex items-center rounded-full bg-gold/10 px-3 py-1.5 text-sm text-navy">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {processSteps.length > 0 && (
+                      <div className="rounded-2xl bg-white border border-gray-100 p-5 mb-6 space-y-3">
+                        <h3 className="text-base font-semibold text-navy">服务流程</h3>
+                        <ol className="text-sm text-gray-600 space-y-2 list-decimal pl-5">
+                          {processSteps.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
 
                     <Link href="/contact" className="btn-primary">
                       立即咨询
