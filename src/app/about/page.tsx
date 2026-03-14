@@ -27,6 +27,13 @@ interface PartnerItem {
   logo: string;
   website?: string;
   linkEnabled?: boolean;
+  bgStyle?: "white" | "gray" | "dark";
+}
+
+function getLogoBgClass(style: string) {
+  if (style === "dark") return "bg-navy border-navy/20";
+  if (style === "gray") return "bg-gray-100 border-gray-200";
+  return "bg-white border-gray-100";
 }
 
 export default async function AboutPage() {
@@ -40,6 +47,8 @@ export default async function AboutPage() {
   }
   const partnersSectionTitle = config.partners_section_title || "合作伙伴";
   const partnersSectionSubtitle = config.partners_section_subtitle || "与稳定可靠的合作伙伴协同，为客户提供更完整的中欧物流服务能力。";
+  const partnersDisplayMode = config.partners_display_mode === "wall" ? "wall" : "card";
+  const globalLogoBgStyle = config.partners_logo_bg_style === "dark" ? "dark" : config.partners_logo_bg_style === "gray" ? "gray" : "white";
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -149,16 +158,44 @@ export default async function AboutPage() {
             <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-500">
               暂未配置合作伙伴展示内容
             </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          ) : partnersDisplayMode === "wall" ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {partners.map((partner) => {
+                const bgClass = getLogoBgClass(partner.bgStyle || globalLogoBgStyle);
                 const card = (
-                  <div className="bg-white rounded-2xl border border-gray-100 p-6 h-full flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
-                    <div className="relative w-full h-20 mb-4">
+                  <div className={`rounded-2xl border p-5 h-28 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow ${bgClass}`}>
+                    <div className="relative w-full h-14">
                       {partner.logo ? (
                         <Image src={partner.logo} alt={partner.name} fill className="object-contain" />
                       ) : (
-                        <div className="w-full h-full rounded-xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+                        <div className="w-full h-full rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+                          暂无 Logo
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+
+                return partner.linkEnabled && partner.website ? (
+                  <Link key={partner.id || partner.name} href={partner.website} target="_blank" rel="noopener noreferrer" className="block" aria-label={partner.name}>
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={partner.id || partner.name} aria-label={partner.name}>{card}</div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {partners.map((partner) => {
+                const bgClass = getLogoBgClass(partner.bgStyle || globalLogoBgStyle);
+                const card = (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6 h-full flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+                    <div className={`relative w-full h-20 mb-4 rounded-xl border ${bgClass}`}>
+                      {partner.logo ? (
+                        <Image src={partner.logo} alt={partner.name} fill className="object-contain p-3" />
+                      ) : (
+                        <div className="w-full h-full rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
                           暂无 Logo
                         </div>
                       )}

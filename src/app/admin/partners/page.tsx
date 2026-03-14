@@ -10,9 +10,16 @@ interface PartnerItem {
   logo: string;
   website: string;
   linkEnabled: boolean;
+  bgStyle: "white" | "gray" | "dark";
 }
 
-const PARTNER_KEYS = ["partners_section_title", "partners_section_subtitle", "partners_items"] as const;
+const PARTNER_KEYS = [
+  "partners_section_title",
+  "partners_section_subtitle",
+  "partners_items",
+  "partners_display_mode",
+  "partners_logo_bg_style",
+] as const;
 
 function createPartner(): PartnerItem {
   return {
@@ -21,12 +28,15 @@ function createPartner(): PartnerItem {
     logo: "",
     website: "",
     linkEnabled: false,
+    bgStyle: "white",
   };
 }
 
 export default function PartnersAdminPage() {
   const [sectionTitle, setSectionTitle] = useState("合作伙伴");
   const [sectionSubtitle, setSectionSubtitle] = useState("与稳定可靠的合作伙伴协同，为客户提供更完整的中欧物流服务能力。");
+  const [displayMode, setDisplayMode] = useState<"card" | "wall">("card");
+  const [globalLogoBgStyle, setGlobalLogoBgStyle] = useState<"white" | "gray" | "dark">("white");
   const [partners, setPartners] = useState<PartnerItem[]>([]);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,11 +53,13 @@ export default function PartnersAdminPage() {
         setSectionSubtitle(
           config.partners_section_subtitle || "与稳定可靠的合作伙伴协同，为客户提供更完整的中欧物流服务能力。"
         );
+        setDisplayMode(config.partners_display_mode === "wall" ? "wall" : "card");
+        setGlobalLogoBgStyle(config.partners_logo_bg_style === "dark" ? "dark" : config.partners_logo_bg_style === "gray" ? "gray" : "white");
 
         if (config.partners_items) {
           try {
             const parsed = JSON.parse(config.partners_items);
-            setPartners(Array.isArray(parsed) ? parsed : []);
+            setPartners(Array.isArray(parsed) ? parsed.map((item) => ({ ...item, bgStyle: item.bgStyle || "white" })) : []);
           } catch {
             setPartners([]);
           }
@@ -92,6 +104,8 @@ export default function PartnersAdminPage() {
       const payload = {
         partners_section_title: sectionTitle,
         partners_section_subtitle: sectionSubtitle,
+        partners_display_mode: displayMode,
+        partners_logo_bg_style: globalLogoBgStyle,
         partners_items: JSON.stringify(partners),
       };
       const response = await fetch("/api/admin/config", {
@@ -131,8 +145,8 @@ export default function PartnersAdminPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-navy">区块文案</h2>
+      <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-navy">区块文案与样式</h2>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">区块标题</label>
           <input value={sectionTitle} onChange={(e) => setSectionTitle(e.target.value)} className="input-field" placeholder="合作伙伴" />
@@ -140,6 +154,33 @@ export default function PartnersAdminPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">区块副标题</label>
           <textarea value={sectionSubtitle} onChange={(e) => setSectionSubtitle(e.target.value)} rows={3} className="input-field resize-none" placeholder="请输入区块说明" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">展示样式</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => setDisplayMode("card")} className={`rounded-xl border px-4 py-3 text-sm ${displayMode === "card" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                卡片式
+              </button>
+              <button type="button" onClick={() => setDisplayMode("wall")} className={`rounded-xl border px-4 py-3 text-sm ${displayMode === "wall" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                品牌墙
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">默认 Logo 背景</label>
+            <div className="grid grid-cols-3 gap-3">
+              <button type="button" onClick={() => setGlobalLogoBgStyle("white")} className={`rounded-xl border px-4 py-3 text-sm ${globalLogoBgStyle === "white" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                白底
+              </button>
+              <button type="button" onClick={() => setGlobalLogoBgStyle("gray")} className={`rounded-xl border px-4 py-3 text-sm ${globalLogoBgStyle === "gray" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                浅灰底
+              </button>
+              <button type="button" onClick={() => setGlobalLogoBgStyle("dark")} className={`rounded-xl border px-4 py-3 text-sm ${globalLogoBgStyle === "dark" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                深色底
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -196,6 +237,20 @@ export default function PartnersAdminPage() {
                     />
                     点击 Logo 跳转到合作伙伴官网
                   </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">该伙伴 Logo 背景</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button type="button" onClick={() => updatePartner(partner.id, { bgStyle: "white" })} className={`rounded-xl border px-4 py-2 text-sm ${partner.bgStyle === "white" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                        白底
+                      </button>
+                      <button type="button" onClick={() => updatePartner(partner.id, { bgStyle: "gray" })} className={`rounded-xl border px-4 py-2 text-sm ${partner.bgStyle === "gray" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                        浅灰底
+                      </button>
+                      <button type="button" onClick={() => updatePartner(partner.id, { bgStyle: "dark" })} className={`rounded-xl border px-4 py-2 text-sm ${partner.bgStyle === "dark" ? "border-navy bg-navy/5 text-navy" : "border-gray-200 bg-white text-gray-600"}`}>
+                        深色底
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <ImageUploadField
