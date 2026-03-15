@@ -46,7 +46,7 @@ export default async function ContactPage() {
       <section className="relative pt-24 pb-16 bg-navy">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-serif text-white font-bold mb-4">联系我们</h1>
-          <p className="text-gray-300 max-w-2xl mx-auto">填写以下表单，我们的专业团队将尽快与您联系</p>
+          <p className="text-gray-300 max-w-2xl mx-auto">把货物信息和交付要求发给我们，我们会尽快给出更贴近实际执行的运输建议。</p>
         </div>
       </section>
 
@@ -55,7 +55,7 @@ export default async function ContactPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
               <h2 className="text-3xl font-serif text-navy font-bold mb-6">联系方式</h2>
-              <p className="text-gray-600 mb-8">您可以通过以下方式联系我们，或直接填写表单提交询价</p>
+              <p className="text-gray-600 mb-8">您可以直接填写表单发送货物信息，也可以通过以下方式联系我们沟通具体运输需求。</p>
 
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">

@@ -83,7 +83,7 @@ const supplementalServices = [
     content:
       "针对欧洲仓库、商业地址、门店与项目现场，提供预约、签收、异常反馈与回单跟踪等尾程交付支持，帮助客户把主程运输真正闭环到收货端。",
     icon: "truck",
-    image: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=800",
+    image: "",
     transit_time: "按目的国与预约时段而定",
     suitable_for: "需送仓 / 送门店 / 送办公室 / 送工地的货物",
   },
@@ -95,7 +95,7 @@ const supplementalServices = [
     content:
       "围绕设备尺寸、装卸条件、目的地限制与交付时间表，定制项目运输方案，可协调分批发运、现场交接、加固包装与多节点运输执行。",
     icon: "package",
-    image: "https://images.unsplash.com/photo-1494412651409-8963ce7935a7?w=800",
+    image: "",
     transit_time: "按项目方案评估",
     suitable_for: "工程设备 / 大件异形件 / 展会物资 / 生产线项目",
   },
@@ -225,12 +225,24 @@ export default async function ServicesPage() {
                   {/* Image */}
                   <div className="w-full lg:w-1/2">
                     <div className="relative h-80 md:h-96 rounded-2xl overflow-hidden shadow-xl">
-                      <Image
-                        src={service.image || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800"}
-                        alt={service.name}
-                        fill
-                        className="object-cover"
-                      />
+                      {service.image ? (
+                        <Image
+                          src={service.image}
+                          alt={service.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-navy via-navy to-gold/70 flex items-center justify-center">
+                          <div className="text-center text-white px-8">
+                            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                              <span className="text-3xl font-bold">SE</span>
+                            </div>
+                            <p className="text-2xl font-serif font-bold mb-3">{service.name}</p>
+                            <p className="text-white/80 text-sm">建议在后台为该服务上传真实业务图片，提升专业信任感。</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -349,13 +361,13 @@ export default async function ServicesPage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl md:text-3xl font-serif text-navy font-bold mb-4">
-            不确定哪种服务适合您？
+            还不确定该走哪种运输方式？
           </h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            我们的专业团队会根据您的货物特点和需求，为您推荐最合适的物流方案
+            把货物品名、重量体积、目的地和时效要求发给我们，我们先帮您判断更合适的运输方案。
           </p>
           <Link href="/contact" className="btn-primary">
-            咨询方案
+            获取方案建议
           </Link>
         </div>
       </section>

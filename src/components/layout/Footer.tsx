@@ -14,7 +14,7 @@ interface FooterProps {
 export default function Footer({
   companyName = "中欧通联国际物流",
   companyNameEn = "Sino Euro Logistics",
-  description = "专注中欧物流14年，提供中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关一站式服务。",
+  description = "聚焦中欧主干运输、欧盟清关与欧洲尾程交付，提供班列、卡航、海运、到门派送和项目货运输方案。",
   phone = "+86 400-888-8888",
   email = "info@sinoeuro.com",
   wechat = "SinoEuroLogistics",

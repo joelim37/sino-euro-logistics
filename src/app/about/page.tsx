@@ -132,7 +132,7 @@ export default async function AboutPage() {
                 {config.about_content || "中欧通联国际物流有限公司成立于2010年，是一家专注于中欧物流服务的国际化物流企业。我们拥有14年行业经验，为客户提供包括中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关在内的一站式物流解决方案。"}
               </p>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                公司总部位于深圳，在欧洲主要城市设有分支机构，拥有专业的操作团队和完善的服务网络。我们始终坚持"客户至上、服务第一"的经营理念，为客户提供安全、高效、便捷的物流服务。
+                公司总部位于深圳，围绕中欧主干线路、清关协同与欧洲尾程交付持续完善服务网络。相比泛化承诺，我们更重视方案匹配、节点控制与异常响应，把每一票货真正交付到位。
               </p>
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 bg-gold rounded-lg flex items-center justify-center">
