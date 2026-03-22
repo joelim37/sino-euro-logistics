@@ -1,6 +1,51 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { ADMIN_BASE_PATH } from "@/lib/admin-path";
+import {
+  ADMIN_GATE_PASSWORD,
+  ADMIN_GATE_REALM_LABEL,
+  ADMIN_GATE_USERNAME,
+} from "@/lib/admin-gate";
+
+function unauthorizedResponse() {
+  return new NextResponse("Authentication required", {
+    status: 401,
+    headers: {
+      "WWW-Authenticate": `Basic realm="${ADMIN_GATE_REALM_LABEL}", charset="UTF-8"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+function safeEqual(a: string, b: string) {
+  const aBuffer = Buffer.from(a);
+  const bBuffer = Buffer.from(b);
+
+  if (aBuffer.length !== bBuffer.length) return false;
+  return timingSafeEqual(aBuffer, bBuffer);
+}
+
+function isAuthorized(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Basic ")) return false;
+
+  const encoded = authHeader.slice(6).trim();
+  if (!encoded) return false;
+
+  try {
+    const decoded = Buffer.from(encoded, "base64").toString("utf8");
+    const separatorIndex = decoded.indexOf(":");
+    if (separatorIndex === -1) return false;
+
+    const username = decoded.slice(0, separatorIndex);
+    const password = decoded.slice(separatorIndex + 1);
+
+    return safeEqual(username, ADMIN_GATE_USERNAME) && safeEqual(password, ADMIN_GATE_PASSWORD);
+  } catch {
+    return false;
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,6 +57,10 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname === ADMIN_BASE_PATH || pathname.startsWith(`${ADMIN_BASE_PATH}/`)) {
+    if (!isAuthorized(request)) {
+      return unauthorizedResponse();
+    }
+
     const url = request.nextUrl.clone();
     const rewrittenPath = pathname.replace(ADMIN_BASE_PATH, "/admin") || "/admin";
     url.pathname = rewrittenPath;

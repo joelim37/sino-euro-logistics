@@ -1,0 +1,7 @@
+const DEFAULT_ADMIN_GATE_USERNAME = "sitekeeper";
+const DEFAULT_ADMIN_GATE_PASSWORD = "Change-This-Gate-Password-Now";
+const ADMIN_GATE_REALM = "Restricted Admin Access";
+
+export const ADMIN_GATE_USERNAME = process.env.ADMIN_GATE_USERNAME || DEFAULT_ADMIN_GATE_USERNAME;
+export const ADMIN_GATE_PASSWORD = process.env.ADMIN_GATE_PASSWORD || DEFAULT_ADMIN_GATE_PASSWORD;
+export const ADMIN_GATE_REALM_LABEL = process.env.ADMIN_GATE_REALM || ADMIN_GATE_REALM;
