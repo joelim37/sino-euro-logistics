@@ -14,15 +14,16 @@ import {
   Handshake,
 } from "lucide-react";
 import { useState } from "react";
+import { ADMIN_BASE_PATH, toAdminPath } from "@/lib/admin-path";
 
 const navItems = [
-  { href: "/admin/banner", label: "Banner管理", icon: Image },
-  { href: "/admin/services", label: "服务管理", icon: Package },
-  { href: "/admin/partners", label: "合作伙伴", icon: Handshake },
-  { href: "/admin/news", label: "新闻管理", icon: MessageSquare },
-  { href: "/admin/media", label: "媒体库", icon: Image },
-  { href: "/admin/inquiries", label: "询价记录", icon: MessageSquare },
-  { href: "/admin/settings", label: "网站设置", icon: Settings },
+  { href: toAdminPath("/banner"), label: "Banner管理", icon: Image },
+  { href: toAdminPath("/services"), label: "服务管理", icon: Package },
+  { href: toAdminPath("/partners"), label: "合作伙伴", icon: Handshake },
+  { href: toAdminPath("/news"), label: "新闻管理", icon: MessageSquare },
+  { href: toAdminPath("/media"), label: "媒体库", icon: Image },
+  { href: toAdminPath("/inquiries"), label: "询价记录", icon: MessageSquare },
+  { href: toAdminPath("/settings"), label: "网站设置", icon: Settings },
 ];
 
 export default function AdminLayout({
@@ -34,11 +35,11 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === ADMIN_BASE_PATH || pathname === toAdminPath("/login");
 
   useEffect(() => {
     if (!isLoginPage && status === "unauthenticated") {
-      router.push("/admin/login");
+      router.push(toAdminPath("/login"));
     }
   }, [isLoginPage, status, router]);
 
@@ -138,7 +139,7 @@ export default function AdminLayout({
                 </div>
               </div>
               <button
-                onClick={() => signOut({ callbackUrl: "/admin/login" })}
+                onClick={() => signOut({ callbackUrl: toAdminPath("/login") })}
                 className="flex items-center space-x-3 px-4 py-3 w-full text-gray-300 hover:bg-white/10 rounded-lg transition-colors"
               >
                 <LogOut className="w-5 h-5" />

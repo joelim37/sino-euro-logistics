@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import { toAdminPath } from "@/lib/admin-path";
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -69,7 +70,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/admin/login",
+    signIn: toAdminPath("/login"),
   },
   session: {
     strategy: "jwt",

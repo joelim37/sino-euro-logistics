@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { toAdminPath } from "@/lib/admin-path";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setError("邮箱或密码错误");
       } else {
-        router.push("/admin/banner");
+        router.push(toAdminPath("/banner"));
       }
     } catch {
       setError("登录失败，请稍后重试");
