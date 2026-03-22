@@ -1,5 +1,5 @@
-const DEFAULT_ADMIN_GATE_USERNAME = "sitekeeper";
-const DEFAULT_ADMIN_GATE_PASSWORD = "Change-This-Gate-Password-Now";
+const DEFAULT_ADMIN_GATE_USERNAME = "se-gate-joex9";
+const DEFAULT_ADMIN_GATE_PASSWORD = "J8!vQ2#Lm7@R4pX9";
 const ADMIN_GATE_REALM = "Restricted Admin Access";
 
 export const ADMIN_GATE_USERNAME = process.env.ADMIN_GATE_USERNAME || DEFAULT_ADMIN_GATE_USERNAME;
