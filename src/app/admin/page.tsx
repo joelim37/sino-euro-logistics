@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, MessageSquare, Newspaper, Package, TrendingUp, Clock } from "lucide-react";
+import { Loader2, MessageSquare, Newspaper, Package, TrendingUp, Clock, ArrowRight, FileText, Settings } from "lucide-react";
 import { toAdminPath } from "@/lib/admin-path";
 
 interface DashboardData {
@@ -95,6 +95,39 @@ export default function AdminDashboardPage() {
             </div>
           );
         })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Link href={toAdminPath("/inquiries")} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:border-gold/40 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-navy mb-1">处理询盘</h3>
+          <p className="text-sm text-gray-500">去看最新客户需求，批量更新状态和导出数据。</p>
+        </Link>
+        <Link href={toAdminPath("/news")} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:border-gold/40 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <FileText className="w-5 h-5" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-navy mb-1">更新新闻</h3>
+          <p className="text-sm text-gray-500">继续发物流资讯，提升收录和专业感。</p>
+        </Link>
+        <Link href={toAdminPath("/settings")} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:border-gold/40 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Settings className="w-5 h-5" />
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-navy mb-1">调整站点内容</h3>
+          <p className="text-sm text-gray-500">更新首页 FAQ、公司信息和底部 CTA。</p>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import FloatingContact from "@/components/layout/FloatingContact";
+import TrackedLink from "@/components/TrackedLink";
 import { getSiteConfig, getServices } from "@/lib/data";
 import { getPublishedNews } from "@/lib/news";
 
@@ -198,20 +199,24 @@ export default async function HomePage() {
             {config.banner_subtitle || "14天最快到欧，欧盟清关全托管"}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <Link
+            <TrackedLink
               href={config.banner_button_link || "/contact"}
               className="btn-primary inline-flex items-center gap-2"
+              eventName="cta_click"
+              eventParams={{ location: "hero_primary", target: config.banner_button_link || "/contact" }}
             >
               <PhoneCall className="w-5 h-5" />
               {config.banner_button_text || "立即咨询"}
-            </Link>
-            <Link
+            </TrackedLink>
+            <TrackedLink
               href="/services"
               className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-3 text-white hover:bg-white/10 transition-colors"
+              eventName="cta_click"
+              eventParams={{ location: "hero_secondary", target: "/services" }}
             >
               <MessageCircleMore className="w-5 h-5" />
               先看方案
-            </Link>
+            </TrackedLink>
           </div>
         </div>
       </section>
@@ -434,8 +439,8 @@ export default async function HomePage() {
               <p className="text-gray-600 max-w-2xl">适合补货、送仓、项目货、清关问题、欧洲派送等场景。先沟通需求，再给运输建议和报价方向。</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/contact" className="btn-primary text-center">提交询价</Link>
-              <Link href="/services" className="btn-secondary text-center">查看服务项目</Link>
+              <TrackedLink href="/contact" className="btn-primary text-center" eventName="cta_click" eventParams={{ location: "quick_contact", target: "/contact" }}>提交询价</TrackedLink>
+              <TrackedLink href="/services" className="btn-secondary text-center" eventName="cta_click" eventParams={{ location: "quick_contact", target: "/services" }}>查看服务项目</TrackedLink>
             </div>
           </div>
         </div>
@@ -450,9 +455,14 @@ export default async function HomePage() {
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
             {config.home_cta_description || "把货物品名、重量体积、目的地和时效要求发给我们，我们先帮你判断更合适的运输方案。"}
           </p>
-          <Link href={config.home_cta_link || "/contact"} className="btn-primary">
+          <TrackedLink
+            href={config.home_cta_link || "/contact"}
+            className="btn-primary"
+            eventName="cta_click"
+            eventParams={{ location: "bottom_cta", target: config.home_cta_link || "/contact" }}
+          >
             {config.home_cta_button_text || "获取方案建议"}
-          </Link>
+          </TrackedLink>
         </div>
       </section>
 

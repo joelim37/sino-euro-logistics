@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import TrackedLink from "@/components/TrackedLink";
 
 const navLinks = [
   { href: "/", label: "首页" },
@@ -63,9 +64,14 @@ export default function Navbar() {
 
           {/* CTA Button */}
           <div className="hidden md:block">
-            <Link href="/contact" className="btn-primary">
+            <TrackedLink
+              href="/contact"
+              className="btn-primary"
+              eventName="cta_click"
+              eventParams={{ location: "navbar", target: "contact" }}
+            >
               立即咨询
-            </Link>
+            </TrackedLink>
           </div>
 
           {/* Mobile Menu Button */}
@@ -91,13 +97,15 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
+              <TrackedLink
                 href="/contact"
                 className="btn-primary text-center"
                 onClick={() => setIsMobileMenuOpen(false)}
+                eventName="cta_click"
+                eventParams={{ location: "mobile_nav", target: "contact" }}
               >
                 立即咨询
-              </Link>
+              </TrackedLink>
             </div>
           </div>
         )}

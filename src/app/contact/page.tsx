@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/contact/ContactForm";
+import TrackedLink from "@/components/TrackedLink";
 import { getSiteConfig } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +65,18 @@ export default async function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-navy mb-1">电话</h3>
-                    <p className="text-gray-600">{config.company_phone || "暂未设置"}</p>
+                    {config.company_phone ? (
+                      <TrackedLink
+                        href={`tel:${config.company_phone}`}
+                        className="text-gray-600 hover:text-gold"
+                        eventName="contact_click"
+                        eventParams={{ location: "contact_page", type: "phone" }}
+                      >
+                        {config.company_phone}
+                      </TrackedLink>
+                    ) : (
+                      <p className="text-gray-600">暂未设置</p>
+                    )}
                   </div>
                 </div>
 
@@ -74,7 +86,18 @@ export default async function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-navy mb-1">邮箱</h3>
-                    <p className="text-gray-600">{config.company_email || "暂未设置"}</p>
+                    {config.company_email ? (
+                      <TrackedLink
+                        href={`mailto:${config.company_email}`}
+                        className="text-gray-600 hover:text-gold"
+                        eventName="contact_click"
+                        eventParams={{ location: "contact_page", type: "email" }}
+                      >
+                        {config.company_email}
+                      </TrackedLink>
+                    ) : (
+                      <p className="text-gray-600">暂未设置</p>
+                    )}
                   </div>
                 </div>
 
@@ -102,6 +125,29 @@ export default async function ContactPage() {
               <div className="mt-8 p-4 bg-white rounded-lg shadow-sm">
                 <h3 className="font-semibold text-navy mb-2">WhatsApp</h3>
                 <p className="text-gray-600">{config.company_whatsapp || "暂未设置"}</p>
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-navy text-white p-6">
+                <h3 className="text-xl font-serif font-bold mb-2">想更快拿到方案？</h3>
+                <p className="text-gray-300 mb-4 text-sm leading-6">提交时尽量带上品名、重量体积、目的地、是否入仓、希望时效。信息越完整，给出的建议越贴近实际执行。</p>
+                <div className="flex flex-wrap gap-3">
+                  <TrackedLink
+                    href={config.company_phone ? `tel:${config.company_phone}` : "/contact"}
+                    className="btn-primary"
+                    eventName="cta_click"
+                    eventParams={{ location: "contact_page_highlight", target: config.company_phone ? "phone" : "contact" }}
+                  >
+                    直接沟通
+                  </TrackedLink>
+                  <TrackedLink
+                    href="/services"
+                    className="inline-flex items-center rounded-lg border border-white/15 px-4 py-2 text-white hover:bg-white/10"
+                    eventName="cta_click"
+                    eventParams={{ location: "contact_page_highlight", target: "/services" }}
+                  >
+                    先看服务项目
+                  </TrackedLink>
+                </div>
               </div>
             </div>
 
