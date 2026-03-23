@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
-import { Train, Truck, Ship, FileCheck, Package } from "lucide-react";
+import { Train, Truck, Ship, FileCheck, Package, CheckCircle2, BadgeHelp } from "lucide-react";
+import TrackedLink from "@/components/TrackedLink";
 
 export const dynamic = "force-dynamic";
 
@@ -148,6 +148,36 @@ const serviceComparisons = [
   },
 ];
 
+const idealCustomers = [
+  {
+    title: "跨境卖家补货团队",
+    description: "更关心补货时效、入仓预约、旺季交付与断货风险控制。",
+  },
+  {
+    title: "外贸工厂 / 贸易公司",
+    description: "更关心单票成本、线路稳定性、清关协同与门到门交付。",
+  },
+  {
+    title: "项目设备 / 工程客户",
+    description: "更关心节点控制、超尺寸运输、现场交接与分批到货安排。",
+  },
+];
+
+const serviceConcerns = [
+  {
+    title: "怕时效不稳",
+    description: "我们会先确认你的交付窗口，再建议更合适的班列、卡航或海运方案，而不是先套模板报价。",
+  },
+  {
+    title: "怕清关反复沟通",
+    description: "针对高货值、首次出货、资料复杂或目的国要求更细的货物，可提前做资料预审，减少卡关概率。",
+  },
+  {
+    title: "怕尾程掉链子",
+    description: "如果你需要送仓、送门店、送办公室或工地，我们会把尾程预约和签收要求一起纳入方案。",
+  },
+];
+
 export default async function ServicesPage() {
   const config = await getSiteConfig();
   const services = await getServices();
@@ -201,6 +231,24 @@ export default async function ServicesPage() {
           <p className="text-gray-300 max-w-2xl mx-auto">
             为您提供全方位的中欧物流一站式解决方案
           </p>
+        </div>
+      </section>
+
+      {/* Customer Fit Section */}
+      <section className="py-16 bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">这页服务更适合哪些客户</h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">如果你属于下面几类典型场景之一，这里的服务结构基本就是按你的真实需求来组织的。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {idealCustomers.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-gray-100 bg-bg p-6 shadow-sm">
+                <h3 className="text-xl font-serif text-navy font-bold mb-3">{item.title}</h3>
+                <p className="text-gray-600 leading-7">{item.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -305,9 +353,24 @@ export default async function ServicesPage() {
                       </div>
                     )}
 
-                    <Link href="/contact" className="btn-primary">
-                      立即咨询
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <TrackedLink
+                        href="/contact"
+                        className="btn-primary"
+                        eventName="cta_click"
+                        eventParams={{ location: `service_block_${service.slug}`, target: "/contact" }}
+                      >
+                        立即咨询
+                      </TrackedLink>
+                      <TrackedLink
+                        href="/contact"
+                        className="btn-secondary"
+                        eventName="cta_click"
+                        eventParams={{ location: `service_block_${service.slug}`, target: "quote" }}
+                      >
+                        获取报价方向
+                      </TrackedLink>
+                    </div>
                   </div>
                 </div>
               );
@@ -333,6 +396,27 @@ export default async function ServicesPage() {
                   <div><span className="font-medium text-gray-800">灵活性：</span>{item.flexibility}</div>
                   <div><span className="font-medium text-gray-800">适合场景：</span>{item.bestFor}</div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Concern Section */}
+      <section className="py-16 bg-bg border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">客户在咨询前最常顾虑什么</h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">把真正影响成交的疑问先说清楚，能减少无效沟通，也更方便客户快速决策。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {serviceConcerns.map((item) => (
+              <div key={item.title} className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center mb-4">
+                  <BadgeHelp className="w-6 h-6 text-gold" />
+                </div>
+                <h3 className="text-xl font-serif text-navy font-bold mb-3">{item.title}</h3>
+                <p className="text-gray-600 leading-7">{item.description}</p>
               </div>
             ))}
           </div>
@@ -367,12 +451,17 @@ export default async function ServicesPage() {
             把货物品名、重量体积、目的地和时效要求发给我们，我们先帮您判断更合适的运输方案。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/contact" className="btn-primary">
+            <TrackedLink href="/contact" className="btn-primary" eventName="cta_click" eventParams={{ location: "services_bottom_cta", target: "advice" }}>
               获取方案建议
-            </Link>
-            <Link href="/contact" className="btn-secondary">
+            </TrackedLink>
+            <TrackedLink href="/contact" className="btn-secondary" eventName="cta_click" eventParams={{ location: "services_bottom_cta", target: "quote" }}>
               直接提交询价
-            </Link>
+            </TrackedLink>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
+            <span className="inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gold" />可先沟通路线和时效</span>
+            <span className="inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gold" />可先判断是否需要清关预审</span>
+            <span className="inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gold" />可先给你报价方向</span>
           </div>
         </div>
       </section>

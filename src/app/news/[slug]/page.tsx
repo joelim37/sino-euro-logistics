@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import TrackedLink from "@/components/TrackedLink";
 import { getSiteConfig } from "@/lib/data";
 import { getNewsBySlug } from "@/lib/news";
 
@@ -45,7 +46,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
   const articleUrl = `https://sinoeurologistics-atpr.vercel.app/news/${article.slug}`;
   const articleJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "NewsArticle",
     headline: article.seo_title || article.title,
     description: article.seo_description || article.summary || "",
     image: article.og_image || article.featured_image || undefined,
@@ -92,6 +93,29 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
           )}
 
           <div className="prose prose-lg max-w-none text-gray-700 leading-8" dangerouslySetInnerHTML={{ __html: article.content || "" }} />
+
+          <div className="mt-12 rounded-3xl bg-navy text-white p-8">
+            <h2 className="text-2xl font-serif font-bold mb-3">看完这篇，还不确定你的货该怎么走？</h2>
+            <p className="text-gray-300 mb-6 leading-7">如果你正在安排中欧运输、补货、清关或欧洲派送，把货物信息发给我们，我们可以先帮你判断更合适的方案方向。</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <TrackedLink
+                href="/contact"
+                className="btn-primary"
+                eventName="cta_click"
+                eventParams={{ location: `news_article_${article.slug}`, target: "/contact" }}
+              >
+                获取运输建议
+              </TrackedLink>
+              <TrackedLink
+                href="/services"
+                className="inline-flex items-center justify-center rounded-lg border border-white/15 px-5 py-3 text-white hover:bg-white/10"
+                eventName="cta_click"
+                eventParams={{ location: `news_article_${article.slug}`, target: "/services" }}
+              >
+                查看服务项目
+              </TrackedLink>
+            </div>
+          </div>
         </div>
       </article>
 

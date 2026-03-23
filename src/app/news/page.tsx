@@ -18,8 +18,24 @@ export default async function NewsPage() {
   const config = await getSiteConfig();
   const news = await getPublishedNews();
 
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "新闻动态",
+    url: "https://sinoeurologistics-atpr.vercel.app/news",
+    description: "中欧物流、欧洲清关、班列、卡航、海运与尾程交付相关的新闻与观察。",
+    mainEntity: news.map((item) => ({
+      "@type": "Article",
+      headline: item.title,
+      url: `https://sinoeurologistics-atpr.vercel.app/news/${item.slug}`,
+      datePublished: item.published_at || item.created_at,
+      description: item.summary || undefined,
+    })),
+  };
+
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />
       <Navbar />
 
       <section className="relative pt-24 pb-16 bg-navy">

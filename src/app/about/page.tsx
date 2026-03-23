@@ -32,6 +32,21 @@ function getLogoBgClass(style: string) {
   return "bg-white border-gray-100";
 }
 
+const aboutFaqs = [
+  {
+    question: "你们更擅长哪类中欧物流需求？",
+    answer: "我们更擅长需要兼顾主程、清关和欧洲尾程衔接的业务，比如补货、门到门、项目货、多批次交付等。",
+  },
+  {
+    question: "你们是先报价还是先做方案？",
+    answer: "通常会先确认货物属性、时效要求、目的地和交付条件，再给更贴近实际执行的方案和报价方向。",
+  },
+  {
+    question: "如果货物情况比较复杂，也能处理吗？",
+    answer: "可以。项目货、异形件、多节点交付、清关资料较复杂的货物，都可以先沟通后定制运输安排。",
+  },
+];
+
 export default async function AboutPage() {
   const config = await getSiteConfig();
   let partners: PartnerItem[] = [];
@@ -80,10 +95,23 @@ export default async function AboutPage() {
     telephone: config.company_phone || undefined,
     address: config.company_address ? { "@type": "PostalAddress", streetAddress: config.company_address, addressCountry: "CN" } : undefined,
   };
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: aboutFaqs.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
 
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <Navbar />
 
       {/* Hero Section */}
@@ -254,6 +282,24 @@ export default async function AboutPage() {
               })}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">关于我们的常见问题</h2>
+            <p className="text-gray-600">把客户在了解合作前最常问的几个问题提前说清楚。</p>
+          </div>
+          <div className="space-y-4">
+            {aboutFaqs.map((item) => (
+              <div key={item.question} className="rounded-2xl bg-bg border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-navy mb-3">{item.question}</h3>
+                <p className="text-gray-600 leading-7">{item.answer}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
