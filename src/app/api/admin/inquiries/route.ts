@@ -15,7 +15,7 @@ function getSupabase() {
 }
 
 // GET - 获取所有询价
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -23,6 +23,8 @@ export async function GET() {
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const exportMode = searchParams.get("export");
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from("inquiries")
@@ -31,6 +33,34 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (exportMode === "csv") {
+      const headers = ["提交时间", "姓名", "公司", "电话", "邮箱", "起点", "目的地", "运输方式", "状态", "备注"];
+      const rows = (data || []).map((item) => [
+        new Date(item.created_at).toLocaleString("zh-CN"),
+        item.name || "",
+        item.company || "",
+        item.phone || "",
+        item.email || "",
+        item.origin || "",
+        item.destination || "",
+        item.service_type || "",
+        item.status || "",
+        (item.notes || "").replace(/[\r\n]+/g, " "),
+      ]);
+
+      const csv = [headers, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+      return new NextResponse(`\uFEFF${csv}`, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(`inquiries-${new Date().toISOString().slice(0, 10)}.csv`)}`,
+        },
+      });
     }
 
     return NextResponse.json({ inquiries: data });

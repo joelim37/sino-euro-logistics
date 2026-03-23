@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp, Package } from "lucide-react";
+import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, TrendingUp, Package, PhoneCall, MessageCircleMore } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "中欧物流一站式解决方案",
   description: "中欧通联提供中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关服务，覆盖欧洲多国，适合跨境卖家与外贸企业。",
+  keywords: ["中欧物流", "欧洲物流", "国际货运", "中欧班列", "卡航", "欧盟清关", "派送到门"],
   alternates: { canonical: "/" },
 };
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import FloatingContact from "@/components/layout/FloatingContact";
 import { getSiteConfig, getServices } from "@/lib/data";
 import { getPublishedNews } from "@/lib/news";
 
@@ -195,13 +197,22 @@ export default async function HomePage() {
           <p className="text-xl md:text-2xl text-gray-200 mb-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
             {config.banner_subtitle || "14天最快到欧，欧盟清关全托管"}
           </p>
-          <Link
-            href="/contact"
-            className="btn-primary inline-block animate-fade-in-up"
-            style={{ animationDelay: "0.4s" }}
-          >
-            {config.banner_button_text || "立即咨询"}
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+            <Link
+              href={config.banner_button_link || "/contact"}
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              <PhoneCall className="w-5 h-5" />
+              {config.banner_button_text || "立即咨询"}
+            </Link>
+            <Link
+              href="/services"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-3 text-white hover:bg-white/10 transition-colors"
+            >
+              <MessageCircleMore className="w-5 h-5" />
+              先看方案
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -413,6 +424,23 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Quick Contact Section */}
+      <section className="py-10 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-bg border border-gray-100 p-6 md:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-gold mb-2">快速联系</p>
+              <h2 className="text-2xl md:text-3xl font-serif text-navy font-bold mb-2">有货在排期？先把需求发过来</h2>
+              <p className="text-gray-600 max-w-2xl">适合补货、送仓、项目货、清关问题、欧洲派送等场景。先沟通需求，再给运输建议和报价方向。</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/contact" className="btn-primary text-center">提交询价</Link>
+              <Link href="/services" className="btn-secondary text-center">查看服务项目</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-navy">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -437,6 +465,7 @@ export default async function HomePage() {
         wechat={config.company_wechat}
         address={config.company_address}
       />
+      <FloatingContact phone={config.company_phone} email={config.company_email} />
     </main>
   );
 }

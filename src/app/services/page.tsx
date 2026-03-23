@@ -366,9 +366,14 @@ export default async function ServicesPage() {
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
             把货物品名、重量体积、目的地和时效要求发给我们，我们先帮您判断更合适的运输方案。
           </p>
-          <Link href="/contact" className="btn-primary">
-            获取方案建议
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/contact" className="btn-primary">
+              获取方案建议
+            </Link>
+            <Link href="/contact" className="btn-secondary">
+              直接提交询价
+            </Link>
+          </div>
         </div>
       </section>
 

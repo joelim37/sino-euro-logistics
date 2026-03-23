@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send, CheckCircle } from "lucide-react";
+import { trackEvent } from "@/lib/tracking";
 
 const serviceTypes = [
   { value: "", label: "请选择运输方式" },
@@ -55,6 +56,11 @@ export default function ContactForm() {
         throw new Error(data.error || "提交失败，请稍后重试");
       }
 
+      trackEvent("generate_lead", {
+        form_name: "contact_inquiry",
+        service_type: formData.service_type || "unspecified",
+        destination: formData.destination || "unspecified",
+      });
       setSubmitSuccess(true);
       setFormData({
         name: "",
@@ -90,7 +96,8 @@ export default function ContactForm() {
 
   return (
     <>
-      <h2 className="text-2xl font-serif text-navy font-bold mb-6">在线询价</h2>
+      <h2 className="text-2xl font-serif text-navy font-bold mb-2">在线询价</h2>
+      <p className="text-sm text-gray-500 mb-6">留下起运地、目的地和时效需求，我们会尽快给你运输建议和报价方向。</p>
 
       {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">{error}</div>}
 
@@ -139,7 +146,11 @@ export default function ContactForm() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
-          <textarea name="notes" value={formData.notes} onChange={handleChange} rows={4} className="input-field resize-none" placeholder="请描述您的货物信息（品名、重量、体积等）" />
+          <textarea name="notes" value={formData.notes} onChange={handleChange} rows={4} className="input-field resize-none" placeholder="请描述您的货物信息（品名、重量、体积、是否入仓、期望时效等）" />
+        </div>
+
+        <div className="rounded-xl bg-bg p-4 text-sm text-gray-600">
+          常见高效询盘内容：货物品名、件数、重量体积、目的国、是否入仓、希望多久到达。
         </div>
 
         <button type="submit" disabled={isSubmitting} className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50">

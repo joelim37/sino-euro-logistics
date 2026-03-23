@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Download, Search, Check, Phone } from "lucide-react";
+import { Loader2, Download, Search, Mail, Phone, CheckCheck } from "lucide-react";
 
 interface Inquiry {
   id: string;
@@ -22,6 +22,8 @@ export default function InquiriesAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "contacted" | "completed">("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBatchUpdating, setIsBatchUpdating] = useState(false);
 
   useEffect(() => {
     fetchInquiries();
@@ -58,27 +60,42 @@ export default function InquiriesAdminPage() {
   };
 
   const exportToCSV = () => {
-    const headers = ["提交时间", "姓名", "公司", "电话", "邮箱", "起点", "目的地", "运输方式", "状态", "备注"];
-    const rows = filteredInquiries.map((item) => [
-      new Date(item.created_at).toLocaleString("zh-CN"),
-      item.name,
-      item.company || "-",
-      item.phone || "-",
-      item.email,
-      item.origin || "-",
-      item.destination,
-      item.service_type || "-",
-      statusLabels[item.status],
-      item.notes || "-",
-    ]);
+    window.open("/api/admin/inquiries?export=csv", "_blank");
+  };
 
-    const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
-    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `询价记录_${new Date().toLocaleDateString("zh-CN")}.csv`;
-    link.click();
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredInquiries.length) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds(filteredInquiries.map((item) => item.id));
+  };
+
+  const handleBatchStatusChange = async (status: "pending" | "contacted" | "completed") => {
+    if (selectedIds.length === 0) return;
+    setIsBatchUpdating(true);
+
+    try {
+      await Promise.all(
+        selectedIds.map((id) =>
+          fetch("/api/admin/inquiries", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, status }),
+          })
+        )
+      );
+      setSelectedIds([]);
+      await fetchInquiries();
+    } finally {
+      setIsBatchUpdating(false);
+    }
   };
 
   const statusLabels = {
@@ -163,13 +180,31 @@ export default function InquiriesAdminPage() {
               </button>
             ))}
           </div>
-          <button
-            onClick={exportToCSV}
-            className="flex items-center space-x-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold-dark transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            <span>导出 CSV</span>
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleBatchStatusChange("contacted")}
+              disabled={selectedIds.length === 0 || isBatchUpdating}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+            >
+              <CheckCheck className="w-4 h-4" />
+              <span>批量标记已联系</span>
+            </button>
+            <button
+              onClick={() => handleBatchStatusChange("completed")}
+              disabled={selectedIds.length === 0 || isBatchUpdating}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50"
+            >
+              <CheckCheck className="w-4 h-4" />
+              <span>批量标记已成单</span>
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center space-x-2 px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold-dark transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>导出 CSV</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -179,6 +214,13 @@ export default function InquiriesAdminPage() {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  <input
+                    type="checkbox"
+                    checked={filteredInquiries.length > 0 && selectedIds.length === filteredInquiries.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">提交时间</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">姓名</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">公司</th>
@@ -192,13 +234,20 @@ export default function InquiriesAdminPage() {
             <tbody className="divide-y divide-gray-100">
               {filteredInquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                     暂无数据
                   </td>
                 </tr>
               ) : (
                 filteredInquiries.map((inquiry) => (
                   <tr key={inquiry.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(inquiry.id)}
+                        onChange={() => toggleSelected(inquiry.id)}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(inquiry.created_at).toLocaleString("zh-CN")}
                     </td>
@@ -261,7 +310,7 @@ export default function InquiriesAdminPage() {
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                           title="发送邮件"
                         >
-                          <Check className="w-4 h-4" />
+                          <Mail className="w-4 h-4" />
                         </a>
                       </div>
                     </td>

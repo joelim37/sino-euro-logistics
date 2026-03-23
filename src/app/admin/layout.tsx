@@ -12,11 +12,13 @@ import {
   Menu,
   X,
   Handshake,
+  LayoutDashboard,
 } from "lucide-react";
 import { useState } from "react";
-import { ADMIN_BASE_PATH, toAdminPath } from "@/lib/admin-path";
+import { toAdminPath } from "@/lib/admin-path";
 
 const navItems = [
+  { href: toAdminPath(""), label: "概览", icon: LayoutDashboard },
   { href: toAdminPath("/banner"), label: "Banner管理", icon: Image },
   { href: toAdminPath("/services"), label: "服务管理", icon: Package },
   { href: toAdminPath("/partners"), label: "合作伙伴", icon: Handshake },
@@ -35,7 +37,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const isLoginPage = pathname === ADMIN_BASE_PATH || pathname === toAdminPath("/login");
+  const isLoginPage = pathname === toAdminPath("/login");
 
   useEffect(() => {
     if (!isLoginPage && status === "unauthenticated") {

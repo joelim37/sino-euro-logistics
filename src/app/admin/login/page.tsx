@@ -59,6 +59,10 @@ export default function AdminLoginPage() {
             </div>
           )}
 
+          <div className="mb-6 rounded-lg bg-bg p-4 text-sm text-gray-600">
+            后台登录已启用失败次数限制：连续多次输错会临时锁定，请不要反复试错。
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
