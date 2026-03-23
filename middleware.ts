@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { ADMIN_BASE_PATH } from "@/lib/admin-path";
 import {
   ADMIN_GATE_PASSWORD,
@@ -19,11 +18,14 @@ function unauthorizedResponse() {
 }
 
 function safeEqual(a: string, b: string) {
-  const aBuffer = Buffer.from(a);
-  const bBuffer = Buffer.from(b);
+  if (a.length !== b.length) return false;
 
-  if (aBuffer.length !== bBuffer.length) return false;
-  return timingSafeEqual(aBuffer, bBuffer);
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return mismatch === 0;
 }
 
 function isAuthorized(request: NextRequest) {
