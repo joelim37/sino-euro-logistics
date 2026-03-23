@@ -77,6 +77,15 @@ export default function AdminDashboardPage() {
       <div>
         <h1 className="text-2xl font-serif text-navy font-bold">后台概览</h1>
         <p className="text-gray-500 mt-1">先看询盘、内容和服务状态，再决定今天优先处理什么。</p>
+        {data.stats.pendingInquiries > 0 ? (
+          <div className="mt-4 inline-flex items-center rounded-full bg-yellow-50 px-4 py-2 text-sm text-yellow-700 border border-yellow-200">
+            当前还有 {data.stats.pendingInquiries} 条待处理询盘，建议优先跟进。
+          </div>
+        ) : (
+          <div className="mt-4 inline-flex items-center rounded-full bg-green-50 px-4 py-2 text-sm text-green-700 border border-green-200">
+            当前没有待处理询盘，可以继续优化内容和服务页。
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
