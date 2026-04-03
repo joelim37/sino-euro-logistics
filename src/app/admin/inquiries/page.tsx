@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Download, Search, Mail, Phone, CheckCheck, Copy, Eye, X } from "lucide-react";
+import { Loader2, Download, Search, Mail, Phone, CheckCheck, Copy, Eye, X, Clock3, MapPinned, Package2, Truck, AlertCircle, CircleCheckBig } from "lucide-react";
 
 interface Inquiry {
   id: string;
@@ -22,6 +22,52 @@ interface Inquiry {
   notes: string;
   status: "pending" | "contacted" | "completed";
   created_at: string;
+}
+
+const statusLabels = {
+  pending: "未处理",
+  contacted: "已联系",
+  completed: "已成单",
+};
+
+const statusClasses = {
+  pending: "bg-yellow-100 text-yellow-700",
+  contacted: "bg-blue-100 text-blue-700",
+  completed: "bg-green-100 text-green-700",
+};
+
+function getHoursSince(createdAt: string) {
+  return Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60)));
+}
+
+function getLeadPriority(inquiry: Inquiry) {
+  let score = 0;
+  if (inquiry.phone) score += 2;
+  if (inquiry.company) score += 1;
+  if (inquiry.cargo_name) score += 1;
+  if (inquiry.hs_code) score += 1;
+  if (inquiry.dimensions) score += 1;
+  if (inquiry.weight) score += 1;
+  if (inquiry.transport_mode) score += 1;
+  if (inquiry.delivery_mode) score += 1;
+  if (inquiry.notes && inquiry.notes.trim().length >= 20) score += 1;
+
+  if (score >= 7) return { label: "高意向", className: "bg-red-100 text-red-700 border-red-200" };
+  if (score >= 4) return { label: "中意向", className: "bg-orange-100 text-orange-700 border-orange-200" };
+  return { label: "普通", className: "bg-gray-100 text-gray-700 border-gray-200" };
+}
+
+function getFollowUpChecklist(inquiry: Inquiry) {
+  return [
+    { label: "已留电话", done: Boolean(inquiry.phone) },
+    { label: "已留公司名", done: Boolean(inquiry.company) },
+    { label: "已写货物品名", done: Boolean(inquiry.cargo_name) },
+    { label: "已写海关编码", done: Boolean(inquiry.hs_code) },
+    { label: "已写包装类型", done: Boolean(inquiry.package_type) },
+    { label: "已写尺寸重量", done: Boolean(inquiry.dimensions || inquiry.weight) },
+    { label: "已写运输类型", done: Boolean(inquiry.transport_mode) },
+    { label: "已写交付方式", done: Boolean(inquiry.delivery_mode) },
+  ];
 }
 
 export default function InquiriesAdminPage() {
@@ -120,12 +166,6 @@ export default function InquiriesAdminPage() {
       setCopyNotice(`复制${label}失败`);
       setTimeout(() => setCopyNotice(""), 1500);
     }
-  };
-
-  const statusLabels = {
-    pending: "未处理",
-    contacted: "已联系",
-    completed: "已成单",
   };
 
   const filteredInquiries = inquiries.filter((item) => {
@@ -257,12 +297,11 @@ export default function InquiriesAdminPage() {
                   />
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">提交时间</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">姓名</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">公司</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">客户</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">联系方式</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">路线</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">运输方式</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">货物信息</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">运输需求</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">意向</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">状态</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">操作</th>
               </tr>
@@ -270,105 +309,95 @@ export default function InquiriesAdminPage() {
             <tbody className="divide-y divide-gray-100">
               {filteredInquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                     暂无数据
                   </td>
                 </tr>
               ) : (
-                filteredInquiries.map((inquiry) => (
-                  <tr key={inquiry.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(inquiry.id)}
-                        onChange={() => toggleSelected(inquiry.id)}
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(inquiry.created_at).toLocaleString("zh-CN")}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-navy">
-                      {inquiry.name}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {inquiry.company || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div>
-                        <p className="text-gray-600">{inquiry.email}</p>
-                        <p className="text-gray-500">{inquiry.phone || "-"}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div>
-                        <p className="text-gray-600">{inquiry.origin || "-"}</p>
-                        <p className="text-gold">→ {inquiry.destination}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      <div className="space-y-1">
-                        <p>{inquiry.service_type || "-"}</p>
-                        <p className="text-xs text-gray-500">{inquiry.transport_mode || "-"} / {inquiry.delivery_mode || "-"}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      <div className="space-y-1">
-                        <p>{inquiry.cargo_name || "-"}</p>
-                        <p className="text-xs text-gray-500">HS：{inquiry.hs_code || "-"}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={inquiry.status}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            inquiry.id,
-                            e.target.value as "pending" | "contacted" | "completed"
-                          )
-                        }
-                        className={`text-sm rounded-lg px-2 py-1 border-0 cursor-pointer ${
-                          inquiry.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : inquiry.status === "contacted"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        <option value="pending">未处理</option>
-                        <option value="contacted">已联系</option>
-                        <option value="completed">已成单</option>
-                      </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveInquiry(inquiry)}
-                          className="p-1 text-navy hover:bg-gray-100 rounded"
-                          title="查看详情"
+                filteredInquiries.map((inquiry) => {
+                  const priority = getLeadPriority(inquiry);
+                  return (
+                    <tr key={inquiry.id} className="hover:bg-gray-50 align-top">
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(inquiry.id)}
+                          onChange={() => toggleSelected(inquiry.id)}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                        <div>{new Date(inquiry.created_at).toLocaleString("zh-CN")}</div>
+                        <div className="text-xs text-gray-400 mt-1">{getHoursSince(inquiry.created_at)} 小时前</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="font-medium text-navy">{inquiry.name}</div>
+                        <div className="text-gray-500 mt-1">{inquiry.company || "-"}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="text-gray-600 break-all">{inquiry.email}</div>
+                        <div className="text-gray-500 mt-1">{inquiry.phone || "-"}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="text-gray-600">{inquiry.origin || "-"}</div>
+                        <div className="text-gold mt-1">→ {inquiry.destination}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <div>{inquiry.service_type || "-"}</div>
+                        <div className="text-xs text-gray-500 mt-1">{inquiry.transport_mode || "-"} / {inquiry.delivery_mode || "-"}</div>
+                        <div className="text-xs text-gray-500 mt-1">{inquiry.cargo_name || "-"}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${priority.className}`}>
+                          {priority.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={inquiry.status}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              inquiry.id,
+                              e.target.value as "pending" | "contacted" | "completed"
+                            )
+                          }
+                          className={`text-sm rounded-lg px-2 py-1 border-0 cursor-pointer ${statusClasses[inquiry.status]}`}
                         >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {inquiry.phone && (
-                          <a
-                            href={`tel:${inquiry.phone}`}
-                            className="p-1 text-green-600 hover:bg-green-50 rounded"
-                            title="拨打电话"
+                          <option value="pending">未处理</option>
+                          <option value="contacted">已联系</option>
+                          <option value="completed">已成单</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setActiveInquiry(inquiry)}
+                            className="p-1 text-navy hover:bg-gray-100 rounded"
+                            title="查看详情"
                           >
-                            <Phone className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {inquiry.phone && (
+                            <a
+                              href={`tel:${inquiry.phone}`}
+                              className="p-1 text-green-600 hover:bg-green-50 rounded"
+                              title="拨打电话"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </a>
+                          )}
+                          <a
+                            href={`mailto:${inquiry.email}`}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                            title="发送邮件"
+                          >
+                            <Mail className="w-4 h-4" />
                           </a>
-                        )}
-                        <a
-                          href={`mailto:${inquiry.email}`}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="发送邮件"
-                        >
-                          <Mail className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -377,128 +406,191 @@ export default function InquiriesAdminPage() {
 
       {activeInquiry && (
         <div className="fixed inset-0 z-50 bg-black/40 flex justify-end">
-          <div className="w-full max-w-xl h-full bg-white shadow-2xl p-6 overflow-y-auto">
-            <div className="flex items-start justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-2xl font-serif text-navy font-bold">{activeInquiry.company || activeInquiry.name}</h2>
-                <p className="text-sm text-gray-500 mt-1">{new Date(activeInquiry.created_at).toLocaleString("zh-CN")}</p>
+          <div className="w-full max-w-2xl h-full bg-[#f8fafc] shadow-2xl overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-100 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h2 className="text-2xl font-serif text-navy font-bold">{activeInquiry.company || activeInquiry.name}</h2>
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusClasses[activeInquiry.status]}`}>
+                      {statusLabels[activeInquiry.status]}
+                    </span>
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getLeadPriority(activeInquiry).className}`}>
+                      {getLeadPriority(activeInquiry).label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">{new Date(activeInquiry.created_at).toLocaleString("zh-CN")} · {getHoursSince(activeInquiry.created_at)} 小时前提交</p>
+                </div>
+                <button type="button" onClick={() => setActiveInquiry(null)} className="p-2 rounded-lg hover:bg-gray-100">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button type="button" onClick={() => setActiveInquiry(null)} className="p-2 rounded-lg hover:bg-gray-100">
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl bg-bg p-4">
-                  <p className="text-xs text-gray-500 mb-1">联系人</p>
-                  <p className="font-medium text-navy">{activeInquiry.name}</p>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="rounded-2xl bg-white border border-gray-100 p-4">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Clock3 className="w-4 h-4" /> 跟进时效</div>
+                  <div className="text-lg font-semibold text-navy">{getHoursSince(activeInquiry.created_at)} 小时</div>
+                  <div className="text-xs text-gray-500 mt-1">建议优先联系新线索</div>
                 </div>
-                <div className="rounded-xl bg-bg p-4">
-                  <p className="text-xs text-gray-500 mb-1">当前状态</p>
-                  <select
-                    value={activeInquiry.status}
-                    onChange={async (e) => {
-                      const status = e.target.value as "pending" | "contacted" | "completed";
-                      await handleStatusChange(activeInquiry.id, status);
-                      setActiveInquiry({ ...activeInquiry, status });
-                    }}
-                    className="w-full bg-transparent text-navy font-medium outline-none"
-                  >
-                    <option value="pending">未处理</option>
-                    <option value="contacted">已联系</option>
-                    <option value="completed">已成单</option>
-                  </select>
+                <div className="rounded-2xl bg-white border border-gray-100 p-4">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><MapPinned className="w-4 h-4" /> 目的地</div>
+                  <div className="text-lg font-semibold text-navy">{activeInquiry.destination || "-"}</div>
+                  <div className="text-xs text-gray-500 mt-1">起点：{activeInquiry.origin || "-"}</div>
+                </div>
+                <div className="rounded-2xl bg-white border border-gray-100 p-4">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Truck className="w-4 h-4" /> 运输偏好</div>
+                  <div className="text-lg font-semibold text-navy">{activeInquiry.transport_mode || "未写"}</div>
+                  <div className="text-xs text-gray-500 mt-1">{activeInquiry.delivery_mode || "未写"}</div>
+                </div>
+                <div className="rounded-2xl bg-white border border-gray-100 p-4">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Package2 className="w-4 h-4" /> 货物信息</div>
+                  <div className="text-lg font-semibold text-navy">{activeInquiry.cargo_name || "未写"}</div>
+                  <div className="text-xs text-gray-500 mt-1">HS：{activeInquiry.hs_code || "未写"}</div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-gray-100 p-5">
-                <h3 className="text-lg font-semibold text-navy mb-4">联系方式</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-gray-500">电话</p>
-                      <p className="text-navy">{activeInquiry.phone || "-"}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <div className="flex items-center justify-between gap-4 mb-4">
+                      <h3 className="text-lg font-semibold text-navy">跟单操作</h3>
+                      <select
+                        value={activeInquiry.status}
+                        onChange={async (e) => {
+                          const status = e.target.value as "pending" | "contacted" | "completed";
+                          await handleStatusChange(activeInquiry.id, status);
+                          setActiveInquiry({ ...activeInquiry, status });
+                        }}
+                        className={`rounded-lg px-3 py-2 text-sm font-medium outline-none ${statusClasses[activeInquiry.status]}`}
+                      >
+                        <option value="pending">未处理</option>
+                        <option value="contacted">已联系</option>
+                        <option value="completed">已成单</option>
+                      </select>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-3">
                       {activeInquiry.phone ? (
-                        <button onClick={() => handleCopy("电话", activeInquiry.phone)} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">
-                          <Copy className="w-4 h-4" />
-                        </button>
-                      ) : null}
-                      {activeInquiry.phone ? (
-                        <a href={`tel:${activeInquiry.phone}`} className="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100">
-                          <Phone className="w-4 h-4" />
+                        <a href={`tel:${activeInquiry.phone}`} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                          <Phone className="w-4 h-4" /> 立即拨打
                         </a>
                       ) : null}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-gray-500">邮箱</p>
-                      <p className="text-navy break-all">{activeInquiry.email}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleCopy("邮箱", activeInquiry.email)} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <a href={`mailto:${activeInquiry.email}`} className="p-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100">
-                        <Mail className="w-4 h-4" />
+                      <a href={`mailto:${activeInquiry.email}`} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                        <Mail className="w-4 h-4" /> 发送邮件
                       </a>
+                      <button onClick={() => handleCopy("邮箱", activeInquiry.email)} className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+                        <Copy className="w-4 h-4" /> 复制邮箱
+                      </button>
+                      {activeInquiry.phone ? (
+                        <button onClick={() => handleCopy("电话", activeInquiry.phone)} className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+                          <Copy className="w-4 h-4" /> 复制电话
+                        </button>
+                      ) : null}
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="rounded-2xl border border-gray-100 p-5">
-                <h3 className="text-lg font-semibold text-navy mb-4">运输需求</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500 mb-1">起点</p>
-                    <p className="text-navy">{activeInquiry.origin || "-"}</p>
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <h3 className="text-lg font-semibold text-navy mb-4">客户资料</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-500 mb-1">联系人</p>
+                        <p className="text-navy font-medium">{activeInquiry.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">公司名称</p>
+                        <p className="text-navy">{activeInquiry.company || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">电话</p>
+                        <p className="text-navy">{activeInquiry.phone || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">邮箱</p>
+                        <p className="text-navy break-all">{activeInquiry.email}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">目的地</p>
-                    <p className="text-navy">{activeInquiry.destination || "-"}</p>
+
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <h3 className="text-lg font-semibold text-navy mb-4">运输需求明细</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-500 mb-1">货物起点</p>
+                        <p className="text-navy">{activeInquiry.origin || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">目的地</p>
+                        <p className="text-navy">{activeInquiry.destination || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">运输方式</p>
+                        <p className="text-navy">{activeInquiry.service_type || "未指定"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">运输类型</p>
+                        <p className="text-navy">{activeInquiry.transport_mode || "未指定"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">交付方式</p>
+                        <p className="text-navy">{activeInquiry.delivery_mode || "未指定"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">包装类型</p>
+                        <p className="text-navy">{activeInquiry.package_type || "未指定"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">货物品名</p>
+                        <p className="text-navy">{activeInquiry.cargo_name || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">海关编码</p>
+                        <p className="text-navy">{activeInquiry.hs_code || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">箱子尺寸</p>
+                        <p className="text-navy">{activeInquiry.dimensions || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 mb-1">箱子重量</p>
+                        <p className="text-navy">{activeInquiry.weight || "-"}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">运输方式</p>
-                    <p className="text-navy">{activeInquiry.service_type || "未指定"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">运输类型</p>
-                    <p className="text-navy">{activeInquiry.transport_mode || "未指定"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">交付方式</p>
-                    <p className="text-navy">{activeInquiry.delivery_mode || "未指定"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">包装类型</p>
-                    <p className="text-navy">{activeInquiry.package_type || "未指定"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">货物品名</p>
-                    <p className="text-navy">{activeInquiry.cargo_name || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">海关编码</p>
-                    <p className="text-navy">{activeInquiry.hs_code || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">箱子尺寸</p>
-                    <p className="text-navy">{activeInquiry.dimensions || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">箱子重量</p>
-                    <p className="text-navy">{activeInquiry.weight || "-"}</p>
+
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <h3 className="text-lg font-semibold text-navy mb-4">客户备注 / 需求补充</h3>
+                    <p className="text-sm text-gray-600 leading-7 whitespace-pre-wrap">{activeInquiry.notes || "客户没有填写备注"}</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="rounded-2xl border border-gray-100 p-5">
-                <h3 className="text-lg font-semibold text-navy mb-4">备注</h3>
-                <p className="text-sm text-gray-600 leading-7 whitespace-pre-wrap">{activeInquiry.notes || "客户没有填写备注"}</p>
+                <div className="space-y-6">
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <h3 className="text-lg font-semibold text-navy mb-4">跟单完整度</h3>
+                    <div className="space-y-3">
+                      {getFollowUpChecklist(activeInquiry).map((item) => (
+                        <div key={item.label} className="flex items-center justify-between gap-3 rounded-xl bg-bg px-3 py-2">
+                          <span className="text-sm text-gray-700">{item.label}</span>
+                          {item.done ? (
+                            <CircleCheckBig className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-yellow-600" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <h3 className="text-lg font-semibold text-navy mb-4">业务建议</h3>
+                    <ul className="space-y-3 text-sm text-gray-600 leading-6">
+                      <li>• 先确认是否要门到门，避免报价口径不一致。</li>
+                      <li>• 若有 HS 编码和包装类型，可更快判断清关与装载方式。</li>
+                      <li>• 尺寸重量已提供时，优先判断整柜/拼箱是否合理。</li>
+                      <li>• 没留电话的线索，建议优先邮件回复并补齐联系方式。</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
