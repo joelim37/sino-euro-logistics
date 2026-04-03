@@ -19,6 +19,7 @@ interface Inquiry {
   weight?: string;
   transport_mode?: string;
   delivery_mode?: string;
+  attachment_urls?: string;
   notes: string;
   status: "pending" | "contacted" | "completed";
   created_at: string;
@@ -67,6 +68,7 @@ function getFollowUpChecklist(inquiry: Inquiry) {
     { label: "已写尺寸重量", done: Boolean(inquiry.dimensions || inquiry.weight) },
     { label: "已写运输类型", done: Boolean(inquiry.transport_mode) },
     { label: "已写交付方式", done: Boolean(inquiry.delivery_mode) },
+    { label: "已上传附件", done: Boolean(inquiry.attachment_urls) },
   ];
 }
 
@@ -556,6 +558,11 @@ export default function InquiriesAdminPage() {
                         <p className="text-navy">{activeInquiry.weight || "-"}</p>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-white border border-gray-100 p-5">
+                    <h3 className="text-lg font-semibold text-navy mb-4">客户附件</h3>
+                    <p className="text-sm text-gray-600 leading-7 whitespace-pre-wrap break-all">{activeInquiry.attachment_urls || "客户没有上传附件"}</p>
                   </div>
 
                   <div className="rounded-2xl bg-white border border-gray-100 p-5">

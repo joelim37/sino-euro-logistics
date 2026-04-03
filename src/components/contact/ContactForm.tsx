@@ -1,11 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Send, CheckCircle } from "lucide-react";
+import { Send, CheckCircle, Upload, Paperclip, Plus, Trash2 } from "lucide-react";
 import { trackEvent } from "@/lib/tracking";
 
 interface ContactFormProps {
   transportOptions?: string[];
+}
+
+interface PackageRow {
+  length: string;
+  width: string;
+  height: string;
+  quantity: string;
+  weight: string;
+}
+
+interface UploadedFile {
+  name: string;
+  path: string;
+  url: string;
+  type: string;
+  size: number;
 }
 
 const fallbackTransportOptions = [
@@ -21,6 +37,14 @@ const fallbackTransportOptions = [
 const packageTypes = ["纸箱", "托盘", "木箱", "裸装", "其他"];
 const transportModes = ["整柜", "拼箱"];
 const deliveryModes = ["到港", "门到门"];
+
+const emptyPackageRow = (): PackageRow => ({
+  length: "",
+  width: "",
+  height: "",
+  quantity: "",
+  weight: "",
+});
 
 export default function ContactForm({ transportOptions = [] }: ContactFormProps) {
   const serviceTypes = useMemo(() => {
@@ -40,12 +64,13 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
     hs_code: "",
     package_type: "",
     package_type_other: "",
-    dimensions: "",
-    weight: "",
     transport_mode: "",
     delivery_mode: "",
     notes: "",
   });
+  const [packageRows, setPackageRows] = useState<PackageRow[]>([emptyPackageRow()]);
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -56,18 +81,75 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePackageChange = (index: number, field: keyof PackageRow, value: string) => {
+    setPackageRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  };
+
+  const addPackageRow = () => {
+    setPackageRows((prev) => [...prev, emptyPackageRow()]);
+  };
+
+  const removePackageRow = (index: number) => {
+    setPackageRows((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    setError("");
+
+    try {
+      const uploaded: UploadedFile[] = [];
+      for (const file of files) {
+        const form = new FormData();
+        form.append("file", file);
+
+        const response = await fetch("/api/inquiry-upload", {
+          method: "POST",
+          body: form,
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `附件 ${file.name} 上传失败`);
+        }
+        uploaded.push(data.file);
+      }
+
+      setAttachments((prev) => [...prev, ...uploaded]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "附件上传失败");
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeAttachment = (path: string) => {
+    setAttachments((prev) => prev.filter((item) => item.path !== path));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
 
     try {
+      const validPackages = packageRows.filter((row) =>
+        row.length || row.width || row.height || row.quantity || row.weight
+      );
+
       const response = await fetch("/api/inquiries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          package_rows: validPackages,
+          attachments,
+        }),
       });
 
       const data = await response.json();
@@ -82,6 +164,7 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
         destination: formData.destination || "unspecified",
         transport_mode: formData.transport_mode || "unspecified",
         delivery_mode: formData.delivery_mode || "unspecified",
+        attachment_count: attachments.length,
       });
       setSubmitSuccess(true);
       setFormData({
@@ -96,12 +179,12 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
         hs_code: "",
         package_type: "",
         package_type_other: "",
-        dimensions: "",
-        weight: "",
         transport_mode: "",
         delivery_mode: "",
         notes: "",
       });
+      setPackageRows([emptyPackageRow()]);
+      setAttachments([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "提交失败，请稍后重试");
     } finally {
@@ -131,7 +214,7 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
 
       {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">姓名 <span className="text-red-500">*</span></label>
@@ -213,14 +296,33 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">箱子尺寸</label>
-            <input type="text" name="dimensions" value={formData.dimensions} onChange={handleChange} className="input-field" placeholder="例如：120×80×100cm / 10箱" />
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">包装尺寸 / 包装重量（多尺寸模式）</label>
+            <button type="button" onClick={addPackageRow} className="inline-flex items-center gap-1 text-sm text-gold hover:underline">
+              <Plus className="w-4 h-4" /> 新增一组尺寸
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">箱子重量</label>
-            <input type="text" name="weight" value={formData.weight} onChange={handleChange} className="input-field" placeholder="例如：800kg / 80kg每箱" />
+          <div className="space-y-3">
+            {packageRows.map((row, index) => (
+              <div key={index} className="rounded-xl border border-gray-200 p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-navy">第 {index + 1} 组包装</p>
+                  {packageRows.length > 1 && (
+                    <button type="button" onClick={() => removePackageRow(index)} className="inline-flex items-center gap-1 text-sm text-red-600 hover:underline">
+                      <Trash2 className="w-4 h-4" /> 删除
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <input type="text" value={row.length} onChange={(e) => handlePackageChange(index, "length", e.target.value)} className="input-field" placeholder="长(cm)" />
+                  <input type="text" value={row.width} onChange={(e) => handlePackageChange(index, "width", e.target.value)} className="input-field" placeholder="宽(cm)" />
+                  <input type="text" value={row.height} onChange={(e) => handlePackageChange(index, "height", e.target.value)} className="input-field" placeholder="高(cm)" />
+                  <input type="text" value={row.quantity} onChange={(e) => handlePackageChange(index, "quantity", e.target.value)} className="input-field" placeholder="箱数" />
+                  <input type="text" value={row.weight} onChange={(e) => handlePackageChange(index, "weight", e.target.value)} className="input-field" placeholder="单箱或本组重量(kg)" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -235,15 +337,41 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">附件上传</label>
+          <label className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 cursor-pointer hover:bg-gray-50">
+            <Upload className="w-4 h-4" />
+            <span>{isUploading ? "上传中..." : "上传装箱单 / 产品照片 / 参考文件"}</span>
+            <input type="file" multiple onChange={handleFileUpload} className="hidden" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx" />
+          </label>
+          <p className="mt-2 text-xs text-gray-500">支持图片、PDF、Word、Excel，单个文件不超过 10MB。</p>
+
+          {attachments.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {attachments.map((file) => (
+                <div key={file.path} className="flex items-center justify-between gap-3 rounded-lg bg-bg px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="w-4 h-4 text-gray-500" />
+                    <a href={file.url} target="_blank" rel="noreferrer" className="truncate text-navy hover:underline">
+                      {file.name}
+                    </a>
+                  </div>
+                  <button type="button" onClick={() => removeAttachment(file.path)} className="text-red-600 hover:underline">删除</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
           <textarea name="notes" value={formData.notes} onChange={handleChange} rows={4} className="input-field resize-none" placeholder="请补充时效要求、是否入仓、发货时间、特殊要求等" />
         </div>
 
         <div className="rounded-xl bg-bg p-4 text-sm text-gray-600">
-          常见高效询盘内容：货物品名、HS 编码、件数、包装类型、单箱尺寸重量、整柜/拼箱、到港/门到门、目的地和希望到货时间。
+          常见高效询盘内容：货物品名、HS 编码、件数、包装类型、多组尺寸重量、整柜/拼箱、到港/门到门、附件资料、目的地和希望到货时间。
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50">
+        <button type="submit" disabled={isSubmitting || isUploading} className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50">
           {isSubmitting ? (
             <>
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">

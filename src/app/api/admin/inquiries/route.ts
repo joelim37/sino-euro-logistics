@@ -47,10 +47,11 @@ export async function GET(request: NextRequest) {
         "货物品名",
         "海关编码",
         "包装类型",
-        "箱子尺寸",
-        "箱子重量",
+        "多尺寸包装明细",
+        "重量明细",
         "运输类型",
         "交付方式",
+        "附件",
         "状态",
         "备注",
       ];
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
         item.weight || "",
         item.transport_mode || "",
         item.delivery_mode || "",
+        item.attachment_urls || "",
         item.status || "",
         (item.notes || "").replace(/[\r\n]+/g, " "),
       ]);
