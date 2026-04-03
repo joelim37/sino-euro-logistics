@@ -14,7 +14,6 @@ function getSupabase() {
   return createClient(url, key);
 }
 
-// GET - 获取所有询价
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -36,7 +35,25 @@ export async function GET(request: NextRequest) {
     }
 
     if (exportMode === "csv") {
-      const headers = ["提交时间", "姓名", "公司", "电话", "邮箱", "起点", "目的地", "运输方式", "状态", "备注"];
+      const headers = [
+        "提交时间",
+        "姓名",
+        "公司",
+        "电话",
+        "邮箱",
+        "起点",
+        "目的地",
+        "运输方式",
+        "货物品名",
+        "海关编码",
+        "包装类型",
+        "箱子尺寸",
+        "箱子重量",
+        "运输类型",
+        "交付方式",
+        "状态",
+        "备注",
+      ];
       const rows = (data || []).map((item) => [
         new Date(item.created_at).toLocaleString("zh-CN"),
         item.name || "",
@@ -46,6 +63,13 @@ export async function GET(request: NextRequest) {
         item.origin || "",
         item.destination || "",
         item.service_type || "",
+        item.cargo_name || "",
+        item.hs_code || "",
+        item.package_type || "",
+        item.dimensions || "",
+        item.weight || "",
+        item.transport_mode || "",
+        item.delivery_mode || "",
         item.status || "",
         (item.notes || "").replace(/[\r\n]+/g, " "),
       ]);
@@ -72,7 +96,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT - 更新询价状态
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
 

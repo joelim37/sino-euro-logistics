@@ -152,7 +152,12 @@ export default async function ContactPage() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <ContactForm />
+              <ContactForm
+                transportOptions={(config.inquiry_transport_options || "")
+                  .split("\n")
+                  .map((item) => item.trim())
+                  .filter(Boolean)}
+              />
             </div>
           </div>
         </div>

@@ -1,21 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Send, CheckCircle } from "lucide-react";
 import { trackEvent } from "@/lib/tracking";
 
-const serviceTypes = [
-  { value: "", label: "请选择运输方式" },
-  { value: "中欧班列", label: "中欧班列" },
-  { value: "卡航快递", label: "卡航快递" },
-  { value: "海运整拼柜", label: "海运整拼柜" },
-  { value: "派送到门", label: "派送到门" },
-  { value: "项目货物运输", label: "项目货物运输" },
-  { value: "欧盟清关", label: "欧盟清关" },
-  { value: "其他", label: "其他" },
+interface ContactFormProps {
+  transportOptions?: string[];
+}
+
+const fallbackTransportOptions = [
+  "中欧班列",
+  "卡航快递",
+  "海运整拼柜",
+  "派送到门",
+  "项目货物运输",
+  "欧盟清关",
+  "其他",
 ];
 
-export default function ContactForm() {
+const packageTypes = ["纸箱", "托盘", "木箱", "裸装", "其他"];
+const transportModes = ["整柜", "拼箱"];
+const deliveryModes = ["到港", "门到门"];
+
+export default function ContactForm({ transportOptions = [] }: ContactFormProps) {
+  const serviceTypes = useMemo(() => {
+    const options = transportOptions.length > 0 ? transportOptions : fallbackTransportOptions;
+    return [{ value: "", label: "请选择运输方式" }, ...options.map((item) => ({ value: item, label: item }))];
+  }, [transportOptions]);
+
   const [formData, setFormData] = useState({
     name: "",
     company: "",
@@ -24,6 +36,14 @@ export default function ContactForm() {
     origin: "",
     destination: "",
     service_type: "",
+    cargo_name: "",
+    hs_code: "",
+    package_type: "",
+    package_type_other: "",
+    dimensions: "",
+    weight: "",
+    transport_mode: "",
+    delivery_mode: "",
     notes: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,6 +80,8 @@ export default function ContactForm() {
         form_name: "contact_inquiry",
         service_type: formData.service_type || "unspecified",
         destination: formData.destination || "unspecified",
+        transport_mode: formData.transport_mode || "unspecified",
+        delivery_mode: formData.delivery_mode || "unspecified",
       });
       setSubmitSuccess(true);
       setFormData({
@@ -70,6 +92,14 @@ export default function ContactForm() {
         origin: "",
         destination: "",
         service_type: "",
+        cargo_name: "",
+        hs_code: "",
+        package_type: "",
+        package_type_other: "",
+        dimensions: "",
+        weight: "",
+        transport_mode: "",
+        delivery_mode: "",
         notes: "",
       });
     } catch (err) {
@@ -97,7 +127,7 @@ export default function ContactForm() {
   return (
     <>
       <h2 className="text-2xl font-serif text-navy font-bold mb-2">在线询价</h2>
-      <p className="text-sm text-gray-500 mb-6">留下起运地、目的地和时效需求，我们会尽快给你运输建议和报价方向。</p>
+      <p className="text-sm text-gray-500 mb-6">留下起运地、目的地和货物信息，我们会尽快给你运输建议和报价方向。</p>
 
       {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">{error}</div>}
 
@@ -115,8 +145,8 @@ export default function ContactForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">电话 <span className="text-red-500">*</span></label>
-            <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="input-field" placeholder="请输入您的电话" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">电话</label>
+            <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" placeholder="请输入您的电话（选填）" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">邮箱 <span className="text-red-500">*</span></label>
@@ -144,13 +174,73 @@ export default function ContactForm() {
           </select>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">货物品名</label>
+            <input type="text" name="cargo_name" value={formData.cargo_name} onChange={handleChange} className="input-field" placeholder="例如：家具、灯具、机械配件" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">海关编码</label>
+            <input type="text" name="hs_code" value={formData.hs_code} onChange={handleChange} className="input-field" placeholder="例如：9403609990" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">包装类型</label>
+            <select name="package_type" value={formData.package_type} onChange={handleChange} className="input-field">
+              <option value="">请选择包装类型</option>
+              {packageTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">运输类型</label>
+            <select name="transport_mode" value={formData.transport_mode} onChange={handleChange} className="input-field">
+              <option value="">请选择运输类型</option>
+              {transportModes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {formData.package_type === "其他" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">其他包装类型说明</label>
+            <input type="text" name="package_type_other" value={formData.package_type_other} onChange={handleChange} className="input-field" placeholder="请填写具体包装类型" />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">箱子尺寸</label>
+            <input type="text" name="dimensions" value={formData.dimensions} onChange={handleChange} className="input-field" placeholder="例如：120×80×100cm / 10箱" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">箱子重量</label>
+            <input type="text" name="weight" value={formData.weight} onChange={handleChange} className="input-field" placeholder="例如：800kg / 80kg每箱" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">交付方式</label>
+          <select name="delivery_mode" value={formData.delivery_mode} onChange={handleChange} className="input-field">
+            <option value="">请选择交付方式</option>
+            {deliveryModes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
-          <textarea name="notes" value={formData.notes} onChange={handleChange} rows={4} className="input-field resize-none" placeholder="请描述您的货物信息（品名、重量、体积、是否入仓、期望时效等）" />
+          <textarea name="notes" value={formData.notes} onChange={handleChange} rows={4} className="input-field resize-none" placeholder="请补充时效要求、是否入仓、发货时间、特殊要求等" />
         </div>
 
         <div className="rounded-xl bg-bg p-4 text-sm text-gray-600">
-          常见高效询盘内容：货物品名、件数、重量体积、目的国、是否入仓、希望多久到达。
+          常见高效询盘内容：货物品名、HS 编码、件数、包装类型、单箱尺寸重量、整柜/拼箱、到港/门到门、目的地和希望到货时间。
         </div>
 
         <button type="submit" disabled={isSubmitting} className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50">

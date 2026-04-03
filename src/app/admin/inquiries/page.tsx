@@ -12,6 +12,13 @@ interface Inquiry {
   origin: string;
   destination: string;
   service_type: string;
+  cargo_name?: string;
+  hs_code?: string;
+  package_type?: string;
+  dimensions?: string;
+  weight?: string;
+  transport_mode?: string;
+  delivery_mode?: string;
   notes: string;
   status: "pending" | "contacted" | "completed";
   created_at: string;
@@ -128,7 +135,9 @@ export default function InquiriesAdminPage() {
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.destination.toLowerCase().includes(searchTerm.toLowerCase());
+      item.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.cargo_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.hs_code?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -147,7 +156,6 @@ export default function InquiriesAdminPage() {
         <p className="text-gray-500 mt-1">管理客户提交的询价信息，优先处理新的和高意向的需求。</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-500">总询价</p>
@@ -167,7 +175,6 @@ export default function InquiriesAdminPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -177,7 +184,7 @@ export default function InquiriesAdminPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="搜索姓名、公司、邮箱、目的地..."
+                placeholder="搜索姓名、公司、邮箱、目的地、品名、海关编码..."
                 className="input-field pl-10"
               />
             </div>
@@ -237,7 +244,6 @@ export default function InquiriesAdminPage() {
         </div>
       )}
 
-      {/* Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -256,6 +262,7 @@ export default function InquiriesAdminPage() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">联系方式</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">路线</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">运输方式</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">货物信息</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">状态</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">操作</th>
               </tr>
@@ -263,7 +270,7 @@ export default function InquiriesAdminPage() {
             <tbody className="divide-y divide-gray-100">
               {filteredInquiries.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                     暂无数据
                   </td>
                 </tr>
@@ -299,7 +306,16 @@ export default function InquiriesAdminPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {inquiry.service_type || "-"}
+                      <div className="space-y-1">
+                        <p>{inquiry.service_type || "-"}</p>
+                        <p className="text-xs text-gray-500">{inquiry.transport_mode || "-"} / {inquiry.delivery_mode || "-"}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <div className="space-y-1">
+                        <p>{inquiry.cargo_name || "-"}</p>
+                        <p className="text-xs text-gray-500">HS：{inquiry.hs_code || "-"}</p>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <select
@@ -445,9 +461,37 @@ export default function InquiriesAdminPage() {
                     <p className="text-gray-500 mb-1">目的地</p>
                     <p className="text-navy">{activeInquiry.destination || "-"}</p>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
                     <p className="text-gray-500 mb-1">运输方式</p>
                     <p className="text-navy">{activeInquiry.service_type || "未指定"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">运输类型</p>
+                    <p className="text-navy">{activeInquiry.transport_mode || "未指定"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">交付方式</p>
+                    <p className="text-navy">{activeInquiry.delivery_mode || "未指定"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">包装类型</p>
+                    <p className="text-navy">{activeInquiry.package_type || "未指定"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">货物品名</p>
+                    <p className="text-navy">{activeInquiry.cargo_name || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">海关编码</p>
+                    <p className="text-navy">{activeInquiry.hs_code || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">箱子尺寸</p>
+                    <p className="text-navy">{activeInquiry.dimensions || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 mb-1">箱子重量</p>
+                    <p className="text-navy">{activeInquiry.weight || "-"}</p>
                   </div>
                 </div>
               </div>

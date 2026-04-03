@@ -30,15 +30,27 @@ export async function POST(request: NextRequest) {
       origin,
       destination,
       service_type,
+      cargo_name,
+      hs_code,
+      package_type,
+      package_type_other,
+      dimensions,
+      weight,
+      transport_mode,
+      delivery_mode,
       notes,
     } = body;
 
-    if (!name || !phone || !email || !destination) {
+    if (!name || !email || !destination) {
       return NextResponse.json(
         { error: "请填写必填字段" },
         { status: 400 }
       );
     }
+
+    const finalPackageType = package_type === "其他"
+      ? [package_type, package_type_other].filter(Boolean).join("：")
+      : package_type || null;
 
     const supabase = getSupabase();
 
@@ -47,11 +59,18 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         company,
-        phone,
+        phone: phone || null,
         email,
         origin,
         destination,
         service_type,
+        cargo_name,
+        hs_code,
+        package_type: finalPackageType,
+        dimensions,
+        weight,
+        transport_mode,
+        delivery_mode,
         notes,
         status: "pending",
       })
@@ -82,7 +101,7 @@ export async function POST(request: NextRequest) {
           to: [adminEmail],
           subject: `新询价 — ${company || name} — ${destination}`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
               <h2 style="color: #0D2545;">新询价通知</h2>
               <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                 <tr>
@@ -112,6 +131,34 @@ export async function POST(request: NextRequest) {
                 <tr>
                   <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">运输方式</td>
                   <td style="padding: 10px; border: 1px solid #ddd;">${service_type || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">货物品名</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${cargo_name || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">海关编码</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${hs_code || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">包装类型</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${finalPackageType || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">箱子尺寸</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${dimensions || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">箱子重量</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${weight || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">运输类型</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${transport_mode || "-"}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">交付方式</td>
+                  <td style="padding: 10px; border: 1px solid #ddd;">${delivery_mode || "-"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">备注</td>

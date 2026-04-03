@@ -64,6 +64,7 @@ interface SiteSettings {
   home_cta_description: string;
   home_cta_button_text: string;
   home_cta_link: string;
+  inquiry_transport_options: string;
 }
 
 const SETTINGS_KEYS = [
@@ -126,6 +127,7 @@ const SETTINGS_KEYS = [
   "home_cta_description",
   "home_cta_button_text",
   "home_cta_link",
+  "inquiry_transport_options",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -189,6 +191,7 @@ export default function SettingsAdminPage() {
     home_cta_description: "把货物品名、重量体积、目的地和时效要求发给我们，我们先帮你判断更合适的运输方案。",
     home_cta_button_text: "获取方案建议",
     home_cta_link: "/contact",
+    inquiry_transport_options: "中欧班列\n卡航快递\n海运整拼柜\n派送到门\n项目货物运输\n欧盟清关\n其他",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -260,6 +263,7 @@ export default function SettingsAdminPage() {
             home_cta_description: data.config.home_cta_description || "把货物品名、重量体积、目的地和时效要求发给我们，我们先帮你判断更合适的运输方案。",
             home_cta_button_text: data.config.home_cta_button_text || "获取方案建议",
             home_cta_link: data.config.home_cta_link || "/contact",
+            inquiry_transport_options: data.config.inquiry_transport_options || "中欧班列\n卡航快递\n海运整拼柜\n派送到门\n项目货物运输\n欧盟清关\n其他",
           });
         }
       } catch (error) {
@@ -709,6 +713,23 @@ export default function SettingsAdminPage() {
                 <input type="text" value={settings.home_cta_link} onChange={(e) => setSettings({ ...settings, home_cta_link: e.target.value })} className="input-field" placeholder="/contact" />
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-navy mb-6">在线询价设置</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">可选运输方式</label>
+            <textarea
+              value={settings.inquiry_transport_options}
+              onChange={(e) =>
+                setSettings({ ...settings, inquiry_transport_options: e.target.value })
+              }
+              rows={8}
+              className="input-field resize-none"
+              placeholder={"中欧班列\n卡航快递\n海运整拼柜\n派送到门\n项目货物运输\n欧盟清关\n其他"}
+            />
+            <p className="mt-2 text-xs text-gray-500">每行一个选项，前台在线询价表单会自动读取这里的运输方式列表。</p>
           </div>
         </div>
 
