@@ -66,6 +66,7 @@ interface SiteSettings {
   home_cta_link: string;
   inquiry_transport_options: string;
   inquiry_notice_email: string;
+  inquiry_notice_from_email: string;
 }
 
 const SETTINGS_KEYS = [
@@ -130,6 +131,7 @@ const SETTINGS_KEYS = [
   "home_cta_link",
   "inquiry_transport_options",
   "inquiry_notice_email",
+  "inquiry_notice_from_email",
 ] as const;
 
 export default function SettingsAdminPage() {
@@ -195,6 +197,7 @@ export default function SettingsAdminPage() {
     home_cta_link: "/contact",
     inquiry_transport_options: "中欧班列\n卡航快递\n海运整拼柜\n派送到门\n项目货物运输\n欧盟清关\n其他",
     inquiry_notice_email: "",
+    inquiry_notice_from_email: "onboarding@resend.dev",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -268,6 +271,7 @@ export default function SettingsAdminPage() {
             home_cta_link: data.config.home_cta_link || "/contact",
             inquiry_transport_options: data.config.inquiry_transport_options || "中欧班列\n卡航快递\n海运整拼柜\n派送到门\n项目货物运输\n欧盟清关\n其他",
             inquiry_notice_email: data.config.inquiry_notice_email || "",
+            inquiry_notice_from_email: data.config.inquiry_notice_from_email || "onboarding@resend.dev",
           });
         }
       } catch (error) {
@@ -748,6 +752,19 @@ export default function SettingsAdminPage() {
                 placeholder="例如：sales@yourcompany.com"
               />
               <p className="mt-2 text-xs text-gray-500">客户提交新询价后，系统会自动把通知邮件发送到这个邮箱；不填则默认发到公司邮箱。</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">询价通知发件邮箱</label>
+              <input
+                type="email"
+                value={settings.inquiry_notice_from_email}
+                onChange={(e) =>
+                  setSettings({ ...settings, inquiry_notice_from_email: e.target.value })
+                }
+                className="input-field"
+                placeholder="例如：noreply@yourdomain.com"
+              />
+              <p className="mt-2 text-xs text-gray-500">如果你在 Resend 已验证自己的域名，请改成该域名下的邮箱。未配置时默认使用 onboarding@resend.dev，便于先排查发信问题。</p>
             </div>
           </div>
         </div>

@@ -46,6 +46,11 @@ const emptyPackageRow = (): PackageRow => ({
   weight: "",
 });
 
+function toNumber(value: string) {
+  const parsed = Number(String(value).replace(/,/g, "").trim());
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export default function ContactForm({ transportOptions = [] }: ContactFormProps) {
   const serviceTypes = useMemo(() => {
     const options = transportOptions.length > 0 ? transportOptions : fallbackTransportOptions;
@@ -74,6 +79,28 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  const totals = useMemo(() => {
+    return packageRows.reduce(
+      (acc, row) => {
+        const length = toNumber(row.length);
+        const width = toNumber(row.width);
+        const height = toNumber(row.height);
+        const quantity = toNumber(row.quantity);
+        const unitWeight = toNumber(row.weight);
+
+        acc.totalQuantity += quantity;
+        if (length && width && height && quantity) {
+          acc.totalVolumeCbm += (length * width * height * quantity) / 1000000;
+        }
+        if (unitWeight && quantity) {
+          acc.totalWeightKg += unitWeight * quantity;
+        }
+        return acc;
+      },
+      { totalQuantity: 0, totalVolumeCbm: 0, totalWeightKg: 0 }
+    );
+  }, [packageRows]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -149,6 +176,7 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
           ...formData,
           package_rows: validPackages,
           attachments,
+          totals,
         }),
       });
 
@@ -318,11 +346,29 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
                   <input type="text" value={row.length} onChange={(e) => handlePackageChange(index, "length", e.target.value)} className="input-field" placeholder="长(cm)" />
                   <input type="text" value={row.width} onChange={(e) => handlePackageChange(index, "width", e.target.value)} className="input-field" placeholder="宽(cm)" />
                   <input type="text" value={row.height} onChange={(e) => handlePackageChange(index, "height", e.target.value)} className="input-field" placeholder="高(cm)" />
-                  <input type="text" value={row.quantity} onChange={(e) => handlePackageChange(index, "quantity", e.target.value)} className="input-field" placeholder="箱数" />
-                  <input type="text" value={row.weight} onChange={(e) => handlePackageChange(index, "weight", e.target.value)} className="input-field" placeholder="单箱或本组重量(kg)" />
+                  <input type="text" value={row.quantity} onChange={(e) => handlePackageChange(index, "quantity", e.target.value)} className="input-field" placeholder="件数" />
+                  <input type="text" value={row.weight} onChange={(e) => handlePackageChange(index, "weight", e.target.value)} className="input-field" placeholder="单件重量(kg)" />
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-4 rounded-xl bg-bg border border-gray-200 p-4 text-sm">
+            <p className="font-medium text-navy mb-3">自动汇总</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-lg bg-white px-3 py-3 border border-gray-100">
+                <p className="text-gray-500 text-xs mb-1">总件数</p>
+                <p className="text-navy font-semibold">{totals.totalQuantity || 0}</p>
+              </div>
+              <div className="rounded-lg bg-white px-3 py-3 border border-gray-100">
+                <p className="text-gray-500 text-xs mb-1">总体积（CBM）</p>
+                <p className="text-navy font-semibold">{totals.totalVolumeCbm.toFixed(3)}</p>
+              </div>
+              <div className="rounded-lg bg-white px-3 py-3 border border-gray-100">
+                <p className="text-gray-500 text-xs mb-1">总重量（KG）</p>
+                <p className="text-navy font-semibold">{totals.totalWeightKg.toFixed(2)}</p>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -18,6 +18,12 @@ interface UploadedFile {
   size?: number;
 }
 
+interface Totals {
+  totalQuantity?: number;
+  totalVolumeCbm?: number;
+  totalWeightKg?: number;
+}
+
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -40,8 +46,8 @@ function formatPackageRows(rows: PackageRow[]) {
     .filter((row) => row.length || row.width || row.height || row.quantity || row.weight)
     .map((row, index) => {
       const size = [row.length, row.width, row.height].filter(Boolean).join(" × ");
-      const qty = row.quantity ? `${row.quantity}箱` : "箱数未填";
-      const weight = row.weight ? `${row.weight}kg` : "重量未填";
+      const qty = row.quantity ? `${row.quantity}件` : "件数未填";
+      const weight = row.weight ? `${row.weight}kg/件` : "单件重量未填";
       return `第${index + 1}组：${size || "尺寸未填"} / ${qty} / ${weight}`;
     })
     .join("\n");
@@ -52,6 +58,15 @@ function formatAttachmentList(files: UploadedFile[]) {
     .filter((file) => file?.url)
     .map((file, index) => `${index + 1}. ${file.name} - ${file.url}`)
     .join("\n");
+}
+
+function formatTotals(totals?: Totals) {
+  if (!totals) return "";
+  return [
+    `总件数：${totals.totalQuantity || 0}`,
+    `总体积：${(totals.totalVolumeCbm || 0).toFixed(3)} CBM`,
+    `总重量：${(totals.totalWeightKg || 0).toFixed(2)} KG`,
+  ].join("\n");
 }
 
 export async function POST(request: NextRequest) {
@@ -74,6 +89,7 @@ export async function POST(request: NextRequest) {
       notes,
       package_rows = [],
       attachments = [],
+      totals,
     } = body as {
       name: string;
       company?: string;
@@ -91,6 +107,7 @@ export async function POST(request: NextRequest) {
       notes?: string;
       package_rows?: PackageRow[];
       attachments?: UploadedFile[];
+      totals?: Totals;
     };
 
     if (!name || !email || !destination) {
@@ -106,9 +123,11 @@ export async function POST(request: NextRequest) {
     const dimensionsText = formatPackageRows(package_rows);
     const totalWeightText = package_rows
       .filter((row) => row.weight)
-      .map((row, index) => `第${index + 1}组：${row.weight}kg`)
+      .map((row, index) => `第${index + 1}组：${row.weight}kg/件`)
       .join("\n");
     const attachmentText = formatAttachmentList(attachments);
+    const totalsText = formatTotals(totals);
+    const finalNotes = [notes, totalsText].filter(Boolean).join("\n\n");
 
     const supabase = getSupabase();
 
@@ -130,7 +149,7 @@ export async function POST(request: NextRequest) {
         transport_mode,
         delivery_mode,
         attachment_urls: attachmentText || null,
-        notes,
+        notes: finalNotes || null,
         status: "pending",
       })
       .select()
@@ -147,16 +166,23 @@ export async function POST(request: NextRequest) {
     const { data: configRows } = await supabase
       .from("site_config")
       .select("key, value")
-      .in("key", ["company_email", "inquiry_notice_email"]);
+      .in("key", ["company_email", "inquiry_notice_email", "inquiry_notice_from_email"]);
 
     const configMap = Object.fromEntries((configRows || []).map((item) => [item.key, item.value]));
     const adminEmail = configMap.inquiry_notice_email || configMap.company_email || "info@sinoeuro.com";
+    const fromEmail = configMap.inquiry_notice_from_email || "onboarding@resend.dev";
+
+    let mailStatus: "sent" | "skipped" | "failed" = "skipped";
+    let mailError = "";
 
     try {
       const resend = getResend();
-      if (resend) {
-        await resend.emails.send({
-          from: "中欧通联 <noreply@sinoeuro.com>",
+      if (!resend) {
+        mailStatus = "failed";
+        mailError = "缺少 RESEND_API_KEY 环境变量";
+      } else {
+        const result = await resend.emails.send({
+          from: `询价通知 <${fromEmail}>`,
           to: [adminEmail],
           subject: `新询价 — ${company || name} — ${destination}`,
           html: `
@@ -176,6 +202,7 @@ export async function POST(request: NextRequest) {
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">包装类型</td><td style="padding: 10px; border: 1px solid #ddd;">${finalPackageType || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">多尺寸包装明细</td><td style="padding: 10px; border: 1px solid #ddd; white-space: pre-line;">${dimensionsText || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">重量明细</td><td style="padding: 10px; border: 1px solid #ddd; white-space: pre-line;">${totalWeightText || "-"}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">自动汇总</td><td style="padding: 10px; border: 1px solid #ddd; white-space: pre-line;">${totalsText || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">运输类型</td><td style="padding: 10px; border: 1px solid #ddd;">${transport_mode || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">交付方式</td><td style="padding: 10px; border: 1px solid #ddd;">${delivery_mode || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">附件</td><td style="padding: 10px; border: 1px solid #ddd; white-space: pre-line;">${attachmentText || "-"}</td></tr>
@@ -185,12 +212,22 @@ export async function POST(request: NextRequest) {
             </div>
           `,
         });
+
+        if ((result as { error?: unknown })?.error) {
+          mailStatus = "failed";
+          mailError = JSON.stringify((result as { error?: unknown }).error);
+          console.error("Email send returned error:", (result as { error?: unknown }).error);
+        } else {
+          mailStatus = "sent";
+        }
       }
     } catch (emailError) {
+      mailStatus = "failed";
+      mailError = emailError instanceof Error ? emailError.message : "邮件发送失败";
       console.error("Email error:", emailError);
     }
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, data, mailStatus, mailError });
   } catch (error) {
     console.error("Server error:", error);
     return NextResponse.json(
