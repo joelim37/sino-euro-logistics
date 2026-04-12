@@ -27,6 +27,7 @@ import FloatingContact from "@/components/layout/FloatingContact";
 import TrackedLink from "@/components/TrackedLink";
 import { getSiteConfig, getServices } from "@/lib/data";
 import { getPublishedNews } from "@/lib/news";
+import { countryContent } from "@/lib/country-content";
 
 // 服务图标映射
 const iconMap: Record<string, React.ElementType> = {
@@ -431,6 +432,28 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ Section */}
+      <section className="py-20 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">热门国家物流专题</h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">针对高频咨询国家，单独拆成国家页，更方便承接“中国到德国物流”“中国到法国物流”这类长尾搜索和询盘需求。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {Object.entries(countryContent).map(([slug, item]) => (
+              <Link key={slug} href={`/countries/${slug}`} className="rounded-2xl border border-gray-100 bg-bg p-6 shadow-sm hover:shadow-md transition-shadow group">
+                <p className="text-sm text-gold mb-3">国家专题页</p>
+                <h3 className="text-2xl font-serif text-navy font-bold mb-3 group-hover:text-gold transition-colors">{item.name}物流</h3>
+                <p className="text-gray-600 text-sm leading-7 mb-4">{item.heroDescription}</p>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-navy group-hover:text-gold transition-colors">
+                  查看 {item.name} 物流方案
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

@@ -9,6 +9,7 @@ import TrackedLink from "@/components/TrackedLink";
 import { getServiceBySlug, getServices, getSiteConfig } from "@/lib/data";
 import { iconMap, serviceScenarios, fallbackScenarios, serviceAdvantages, serviceProcess, mergeServices } from "@/lib/service-content";
 import { serviceDetailContent } from "@/lib/service-detail-content";
+import { serviceCaseContent } from "@/lib/service-case-content";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
 
   const relatedServices = allServices.filter((item) => item.slug !== service.slug).slice(0, 4);
   const detail = serviceDetailContent[service.slug];
+  const caseItem = serviceCaseContent[service.slug];
   const Icon = iconMap[service.icon] || iconMap.train;
   const scenarios = serviceScenarios[service.name] || fallbackScenarios;
   const advantages = serviceAdvantages[service.name] || [];
@@ -331,6 +333,30 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
                 </div>
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {caseItem && (
+        <section className="py-16 bg-white border-t border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-serif text-navy font-bold mb-4">{service.name}案例化场景说明</h2>
+              <p className="text-gray-600 max-w-3xl mx-auto">不用只讲抽象服务，把真实业务里更常见的使用场景、难点和解决思路直接说清楚。</p>
+            </div>
+            <div className="rounded-3xl border border-gray-100 bg-bg p-8 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <p className="text-sm text-gold mb-3">典型业务案例</p>
+                <h3 className="text-2xl font-serif text-navy font-bold mb-4">{caseItem.title}</h3>
+                <p className="text-gray-600 leading-8">{caseItem.summary}</p>
+              </div>
+              <div className="space-y-4 text-gray-600 leading-7">
+                <p><span className="font-semibold text-navy">场景：</span>{caseItem.scenario}</p>
+                <p><span className="font-semibold text-navy">难点：</span>{caseItem.challenge}</p>
+                <p><span className="font-semibold text-navy">思路：</span>{caseItem.solution}</p>
+                <p><span className="font-semibold text-navy">结果：</span>{caseItem.result}</p>
+              </div>
+            </div>
           </div>
         </section>
       )}

@@ -7,6 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getSiteConfig, getServices } from "@/lib/data";
 import { iconMap, serviceScenarios, fallbackScenarios, serviceAdvantages, serviceProcess, mergeServices } from "@/lib/service-content";
+import { serviceCaseContent } from "@/lib/service-case-content";
 
 export const dynamic = "force-dynamic";
 
@@ -290,6 +291,28 @@ export default async function ServicesPage() {
 
       <section className="py-20 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-serif text-navy font-bold mb-4">典型业务案例场景</h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">用更接近真实业务的表达，把客户为什么会选班列、卡航、海运、清关或到门服务说清楚。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
+            {uniqueServices.slice(0, 4).map((service) => {
+              const caseItem = serviceCaseContent[service.slug];
+              if (!caseItem) return null;
+              return (
+                <div key={service.slug} className="rounded-3xl border border-gray-100 bg-bg p-8 shadow-sm">
+                  <p className="text-sm text-gold mb-2">案例化表达</p>
+                  <h3 className="text-2xl font-serif text-navy font-bold mb-3">{caseItem.title}</h3>
+                  <p className="text-gray-600 leading-7 mb-4">{caseItem.summary}</p>
+                  <div className="space-y-3 text-sm text-gray-600 leading-7">
+                    <p><span className="font-semibold text-navy">场景：</span>{caseItem.scenario}</p>
+                    <p><span className="font-semibold text-navy">难点：</span>{caseItem.challenge}</p>
+                    <p><span className="font-semibold text-navy">思路：</span>{caseItem.solution}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <div className="text-center mb-12">
             <h2 className="text-3xl font-serif text-navy font-bold mb-4">班列 / 卡航 / 海运怎么选</h2>
             <p className="text-gray-600 max-w-3xl mx-auto">把客户最常比较的三种运输方案拆开说清楚，方便快速判断时效、成本和适用品类。</p>
