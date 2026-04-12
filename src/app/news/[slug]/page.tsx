@@ -21,7 +21,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: article.seo_title || article.title,
     description: article.seo_description || article.summary || "",
     keywords: article.seo_keywords || undefined,
+    alternates: {
+      canonical: `/news/${article.slug}`,
+    },
     openGraph: {
+      type: "article",
+      url: `/news/${article.slug}`,
       title: article.seo_title || article.title,
       description: article.seo_description || article.summary || "",
       images: shareImage ? [shareImage] : undefined,
@@ -104,7 +109,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                 eventName="cta_click"
                 eventParams={{ location: `news_article_${article.slug}`, target: "/contact" }}
               >
-                获取运输建议
+                获取中欧物流运输建议
               </TrackedLink>
               <TrackedLink
                 href="/services"
@@ -112,7 +117,7 @@ export default async function NewsDetailPage({ params }: { params: { slug: strin
                 eventName="cta_click"
                 eventParams={{ location: `news_article_${article.slug}`, target: "/services" }}
               >
-                查看服务项目
+                查看中欧物流服务项目
               </TrackedLink>
             </div>
           </div>

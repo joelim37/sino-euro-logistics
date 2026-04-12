@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Send, CheckCircle, Upload, Paperclip, Plus, Trash2 } from "lucide-react";
 import { trackEvent } from "@/lib/tracking";
 
@@ -22,6 +22,15 @@ interface UploadedFile {
   url: string;
   type: string;
   size: number;
+}
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: Record<string, unknown>) => string | number;
+      reset: (widgetId?: string | number) => void;
+    };
+  }
 }
 
 const fallbackTransportOptions = [
@@ -74,11 +83,19 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
     notes: "",
   });
   const [packageRows, setPackageRows] = useState<PackageRow[]>([emptyPackageRow()]);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+  const turnstileEnabled = Boolean(turnstileSiteKey);
   const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReady, setCaptchaReady] = useState(!turnstileEnabled);
+  const [captchaRendered, setCaptchaRendered] = useState(false);
+  const widgetContainerRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<string | number | null>(null);
+  const formLoadedAtRef = useRef(Date.now());
 
   const totals = useMemo(() => {
     return packageRows.reduce(
@@ -101,6 +118,75 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
       { totalQuantity: 0, totalVolumeCbm: 0, totalWeightKg: 0 }
     );
   }, [packageRows]);
+
+  useEffect(() => {
+    formLoadedAtRef.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    if (!turnstileEnabled) {
+      setCaptchaReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const renderWidget = () => {
+      if (!widgetContainerRef.current || !window.turnstile || captchaRendered) {
+        return;
+      }
+
+      widgetIdRef.current = window.turnstile.render(widgetContainerRef.current, {
+        sitekey: turnstileSiteKey,
+        theme: "auto",
+        callback: (token: string) => {
+          setCaptchaToken(token);
+          setError("");
+        },
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+      });
+
+      setCaptchaReady(true);
+      setCaptchaRendered(true);
+    };
+
+    if (window.turnstile) {
+      renderWidget();
+      return;
+    }
+
+    const existingScript = document.querySelector('script[data-turnstile="true"]') as HTMLScriptElement | null;
+    const script = existingScript || document.createElement("script");
+
+    if (!existingScript) {
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.setAttribute("data-turnstile", "true");
+      document.head.appendChild(script);
+    }
+
+    const handleLoad = () => {
+      if (!cancelled) {
+        renderWidget();
+      }
+    };
+
+    script.addEventListener("load", handleLoad);
+
+    return () => {
+      cancelled = true;
+      script.removeEventListener("load", handleLoad);
+    };
+  }, [captchaRendered, turnstileEnabled, turnstileSiteKey]);
+
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    if (turnstileEnabled && window.turnstile && widgetIdRef.current !== null) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -167,6 +253,14 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
         row.length || row.width || row.height || row.quantity || row.weight
       );
 
+      if (turnstileEnabled && !captchaReady) {
+        throw new Error("安全验证尚未加载完成，请稍后再试");
+      }
+
+      if (turnstileEnabled && !captchaToken) {
+        throw new Error("请先完成人机验证");
+      }
+
       const response = await fetch("/api/inquiries", {
         method: "POST",
         headers: {
@@ -174,6 +268,9 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
         },
         body: JSON.stringify({
           ...formData,
+          website: "",
+          captchaToken,
+          formLoadedAt: formLoadedAtRef.current,
           package_rows: validPackages,
           attachments,
           totals,
@@ -213,8 +310,10 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
       });
       setPackageRows([emptyPackageRow()]);
       setAttachments([]);
+      resetCaptcha();
     } catch (err) {
       setError(err instanceof Error ? err.message : "提交失败，请稍后重试");
+      resetCaptcha();
     } finally {
       setIsSubmitting(false);
     }
@@ -243,6 +342,18 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
       {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="hidden" aria-hidden="true">
+          <label htmlFor="website">Website</label>
+          <input
+            id="website"
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value=""
+            onChange={() => undefined}
+          />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">姓名 <span className="text-red-500">*</span></label>
@@ -416,6 +527,15 @@ export default function ContactForm({ transportOptions = [] }: ContactFormProps)
         <div className="rounded-xl bg-bg p-4 text-sm text-gray-600">
           常见高效询盘内容：货物品名、HS 编码、件数、包装类型、多组尺寸重量、整柜/拼箱、到港/门到门、附件资料、目的地和希望到货时间。
         </div>
+
+        {turnstileEnabled && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <p className="mb-2 text-sm font-medium text-gray-700">人机验证</p>
+            <div ref={widgetContainerRef} className="min-h-[65px] overflow-hidden" />
+            {!captchaReady && <p className="mt-2 text-xs text-gray-500">安全验证加载中...</p>}
+            <p className="mt-2 text-xs text-gray-500">请先完成人机验证，再提交询价。</p>
+          </div>
+        )}
 
         <button type="submit" disabled={isSubmitting || isUploading} className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50">
           {isSubmitting ? (

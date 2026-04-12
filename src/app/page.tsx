@@ -6,10 +6,20 @@ import { ArrowRight, Train, Truck, Ship, FileCheck, Clock, Shield, Globe, Trendi
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "中欧物流一站式解决方案",
-  description: "中欧通联提供中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关服务，覆盖欧洲多国，适合跨境卖家与外贸企业。",
-  keywords: ["中欧物流", "欧洲物流", "国际货运", "中欧班列", "卡航", "欧盟清关", "派送到门"],
+  title: "中欧班列、卡航、海运及欧盟清关到门一站式物流服务",
+  description: "中欧通联提供中国到欧洲物流解决方案，覆盖中欧班列、中欧卡航、中欧海运、欧盟清关与欧洲派送到门，适合跨境卖家与外贸企业。",
+  keywords: ["中欧物流", "中国到欧洲物流", "中欧班列", "中欧卡航", "中欧海运", "欧盟清关", "欧洲派送到门"],
   alternates: { canonical: "/" },
+  openGraph: {
+    title: "中欧班列、卡航、海运及欧盟清关到门一站式物流服务",
+    description: "中欧通联提供中国到欧洲物流解决方案，覆盖中欧班列、中欧卡航、中欧海运、欧盟清关与欧洲派送到门，适合跨境卖家与外贸企业。",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "中欧班列、卡航、海运及欧盟清关到门一站式物流服务",
+    description: "中欧通联提供中国到欧洲物流解决方案，覆盖中欧班列、中欧卡航、中欧海运、欧盟清关与欧洲派送到门，适合跨境卖家与外贸企业。",
+  },
 };
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -169,10 +179,19 @@ export default async function HomePage() {
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "首页", item: "https://sinoeurologistics-atpr.vercel.app/" },
+    ],
+  };
+
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       {/* Hero Banner */}
@@ -193,10 +212,10 @@ export default async function HomePage() {
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-serif text-white font-bold mb-6 animate-fade-in-up">
-            {config.banner_title || "专注中欧走廊的物流专家"}
+            {config.banner_title || "中欧班列、卡航、海运及欧盟清关到门一站式物流服务"}
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-            {config.banner_subtitle || "14天最快到欧，欧盟清关全托管"}
+            {config.banner_subtitle || "提供中国到欧洲物流解决方案，覆盖中欧班列、中欧卡航、中欧海运、欧盟清关与欧洲派送到门"}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
             <TrackedLink
@@ -206,7 +225,7 @@ export default async function HomePage() {
               eventParams={{ location: "hero_primary", target: config.banner_button_link || "/contact" }}
             >
               <PhoneCall className="w-5 h-5" />
-              {config.banner_button_text || "立即咨询"}
+              {config.banner_button_text || "获取中国到欧洲物流方案"}
             </TrackedLink>
             <TrackedLink
               href="/services"
@@ -215,7 +234,7 @@ export default async function HomePage() {
               eventParams={{ location: "hero_secondary", target: "/services" }}
             >
               <MessageCircleMore className="w-5 h-5" />
-              先看方案
+              查看中欧物流服务项目
             </TrackedLink>
           </div>
         </div>
@@ -239,7 +258,7 @@ export default async function HomePage() {
               return (
                 <Link
                   key={service.id}
-                  href="/services"
+                  href={`/services/${service.slug}`}
                   className="service-card group"
                 >
                   <div className="w-14 h-14 bg-navy/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
@@ -253,7 +272,7 @@ export default async function HomePage() {
                   </div>
                   <p className="text-gray-600 mb-4">{service.description}</p>
                   <div className="flex items-center text-gold text-sm font-medium">
-                    <span>了解更多</span>
+                    <span>查看 {service.name} 运输方案</span>
                     <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -342,10 +361,10 @@ export default async function HomePage() {
                       {featuredNews.title}
                     </h3>
                     <p className="text-gray-200 max-w-2xl line-clamp-3 mb-6">
-                      {featuredNews.summary || "点击查看详情"}
+                      {featuredNews.summary || "查看这篇中欧物流与欧洲清关实务文章"}
                     </p>
                     <span className="inline-flex items-center gap-2 text-sm font-medium text-white group-hover:text-gold transition-colors">
-                      查看详情
+                      查看物流文章详情
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>
@@ -373,7 +392,7 @@ export default async function HomePage() {
                           {item.title}
                         </h3>
                         <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                          {item.summary || "点击查看详情"}
+                          {item.summary || "查看这篇中欧物流行业文章"}
                         </p>
                         <span className="inline-flex items-center gap-2 text-sm font-medium text-navy group-hover:text-gold transition-colors">
                           继续阅读
@@ -440,7 +459,7 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <TrackedLink href="/contact" className="btn-primary text-center" eventName="cta_click" eventParams={{ location: "quick_contact", target: "/contact" }}>提交询价</TrackedLink>
-              <TrackedLink href="/services" className="btn-secondary text-center" eventName="cta_click" eventParams={{ location: "quick_contact", target: "/services" }}>查看服务项目</TrackedLink>
+              <TrackedLink href="/services" className="btn-secondary text-center" eventName="cta_click" eventParams={{ location: "quick_contact", target: "/services" }}>查看中欧物流服务项目</TrackedLink>
             </div>
           </div>
         </div>

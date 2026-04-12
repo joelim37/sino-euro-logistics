@@ -9,9 +9,19 @@ import { getSiteConfig } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "联系我们",
-  description: "联系中欧通联国际物流，获取中欧班列、卡航快递、海运整拼柜、派送到门、项目货物运输及欧盟清关方案报价。",
+  title: "联系我们 - 获取中国到欧洲物流方案与报价",
+  description: "联系中欧通联国际物流，获取中欧班列、中欧卡航、中欧海运、欧盟清关、欧洲派送到门与项目货物运输方案报价。",
   alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "联系我们 - 获取中国到欧洲物流方案与报价",
+    description: "联系中欧通联国际物流，获取中欧班列、中欧卡航、中欧海运、欧盟清关、欧洲派送到门与项目货物运输方案报价。",
+    url: "/contact",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "联系我们 - 获取中国到欧洲物流方案与报价",
+    description: "联系中欧通联国际物流，获取中欧班列、中欧卡航、中欧海运、欧盟清关、欧洲派送到门与项目货物运输方案报价。",
+  },
 };
 
 export default async function ContactPage() {
@@ -39,9 +49,19 @@ export default async function ContactPage() {
     },
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "首页", item: "https://sinoeurologistics-atpr.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: "联系我们", item: "https://sinoeurologistics-atpr.vercel.app/contact" },
+    ],
+  };
+
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       <section className="relative pt-24 pb-16 bg-navy">

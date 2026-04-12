@@ -9,9 +9,19 @@ import { getPublishedNews } from "@/lib/news";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "新闻动态",
-  description: "查看中欧物流、欧洲清关、铁路运输、卡航派送、欧洲仓储与行业趋势相关的最新新闻动态与实务观察。",
+  title: "新闻动态 - 中欧物流、清关与欧洲派送行业观察",
+  description: "查看中欧物流、欧盟清关、中欧班列、中欧卡航、中欧海运与欧洲派送到门相关的最新新闻动态与实务观察。",
   alternates: { canonical: "/news" },
+  openGraph: {
+    title: "新闻动态 - 中欧物流、清关与欧洲派送行业观察",
+    description: "查看中欧物流、欧盟清关、中欧班列、中欧卡航、中欧海运与欧洲派送到门相关的最新新闻动态与实务观察。",
+    url: "/news",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "新闻动态 - 中欧物流、清关与欧洲派送行业观察",
+    description: "查看中欧物流、欧盟清关、中欧班列、中欧卡航、中欧海运与欧洲派送到门相关的最新新闻动态与实务观察。",
+  },
 };
 
 export default async function NewsPage() {
@@ -33,9 +43,19 @@ export default async function NewsPage() {
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "首页", item: "https://sinoeurologistics-atpr.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: "新闻动态", item: "https://sinoeurologistics-atpr.vercel.app/news" },
+    ],
+  };
+
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       <section className="relative pt-24 pb-16 bg-navy">
@@ -61,7 +81,7 @@ export default async function NewsPage() {
                   <div className="p-6">
                     <p className="text-sm text-gold mb-3">{item.published_at ? new Date(item.published_at).toLocaleDateString("zh-CN") : "未发布"}</p>
                     <h2 className="text-xl font-serif text-navy font-bold mb-3 line-clamp-2">{item.title}</h2>
-                    <p className="text-gray-600 line-clamp-3">{item.summary || "点击查看详情"}</p>
+                    <p className="text-gray-600 line-clamp-3">{item.summary || "查看这篇中欧物流、清关与欧洲派送相关文章"}</p>
                   </div>
                 </Link>
               ))}

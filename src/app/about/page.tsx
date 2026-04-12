@@ -6,9 +6,19 @@ import { Award, Users, Globe, TrendingUp, Handshake } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "关于我们",
-  description: "了解中欧通联国际物流的发展历程、服务网络、行业经验与核心价值，查看我们的中欧物流一站式服务能力。",
+  title: "关于我们 - 中欧物流服务能力与企业介绍",
+  description: "了解中欧通联国际物流的中欧班列、卡航、海运、欧盟清关与欧洲派送到门服务能力，查看企业介绍、合作伙伴与常见问题。",
   alternates: { canonical: "/about" },
+  openGraph: {
+    title: "关于我们 - 中欧物流服务能力与企业介绍",
+    description: "了解中欧通联国际物流的中欧班列、卡航、海运、欧盟清关与欧洲派送到门服务能力，查看企业介绍、合作伙伴与常见问题。",
+    url: "/about",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "关于我们 - 中欧物流服务能力与企业介绍",
+    description: "了解中欧通联国际物流的中欧班列、卡航、海运、欧盟清关与欧洲派送到门服务能力，查看企业介绍、合作伙伴与常见问题。",
+  },
 };
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -108,10 +118,20 @@ export default async function AboutPage() {
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "首页", item: "https://sinoeurologistics-atpr.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: "关于我们", item: "https://sinoeurologistics-atpr.vercel.app/about" },
+    ],
+  };
+
   return (
     <main className="min-h-screen">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Navbar />
 
       {/* Hero Section */}

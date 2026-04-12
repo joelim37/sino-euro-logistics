@@ -70,7 +70,7 @@ export default function Navbar() {
               eventName="cta_click"
               eventParams={{ location: "navbar", target: "contact" }}
             >
-              立即咨询
+              获取物流方案
             </TrackedLink>
           </div>
 
@@ -104,7 +104,7 @@ export default function Navbar() {
                 eventName="cta_click"
                 eventParams={{ location: "mobile_nav", target: "contact" }}
               >
-                立即咨询
+                获取物流方案
               </TrackedLink>
             </div>
           </div>

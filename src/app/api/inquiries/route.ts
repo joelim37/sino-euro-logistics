@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 3;
+const MIN_FORM_FILL_MS = 3000;
+const ipRequestLog = new Map<string, number[]>();
+
 interface PackageRow {
   length?: string;
   width?: string;
@@ -87,6 +92,9 @@ export async function POST(request: NextRequest) {
       transport_mode,
       delivery_mode,
       notes,
+      website,
+      captchaToken,
+      formLoadedAt,
       package_rows = [],
       attachments = [],
       totals,
@@ -105,10 +113,20 @@ export async function POST(request: NextRequest) {
       transport_mode?: string;
       delivery_mode?: string;
       notes?: string;
+      website?: string;
+      captchaToken?: string;
+      formLoadedAt?: number;
       package_rows?: PackageRow[];
       attachments?: UploadedFile[];
       totals?: Totals;
     };
+
+    const clientIp = getClientIp(request);
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+
+    if (website) {
+      return NextResponse.json({ success: true, skipped: true });
+    }
 
     if (!name || !email || !destination) {
       return NextResponse.json(
@@ -116,6 +134,44 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (!isFormFillDelayValid(formLoadedAt)) {
+      return NextResponse.json(
+        { error: "提交过快，请稍后重试" },
+        { status: 400 }
+      );
+    }
+
+    if (isRateLimited(clientIp)) {
+      return NextResponse.json(
+        { error: "提交过于频繁，请稍后再试" },
+        { status: 429 }
+      );
+    }
+
+    if (turnstileSecret) {
+      if (!captchaToken) {
+        return NextResponse.json(
+          { error: "请先完成人机验证" },
+          { status: 400 }
+        );
+      }
+
+      const captchaResult = await verifyTurnstileToken({
+        token: captchaToken,
+        ip: clientIp,
+        secret: turnstileSecret,
+      });
+
+      if (!captchaResult.success) {
+        return NextResponse.json(
+          { error: "安全验证失败，请重试", details: captchaResult["error-codes"] || [] },
+          { status: 400 }
+        );
+      }
+    }
+
+    recordRequest(clientIp);
 
     const finalPackageType = package_type === "其他"
       ? [package_type, package_type_other].filter(Boolean).join("：")
@@ -207,6 +263,7 @@ export async function POST(request: NextRequest) {
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">交付方式</td><td style="padding: 10px; border: 1px solid #ddd;">${delivery_mode || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">附件</td><td style="padding: 10px; border: 1px solid #ddd; white-space: pre-line;">${attachmentText || "-"}</td></tr>
                 <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">备注</td><td style="padding: 10px; border: 1px solid #ddd; white-space: pre-line;">${notes || "-"}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">来源 IP</td><td style="padding: 10px; border: 1px solid #ddd;">${clientIp || "-"}</td></tr>
               </table>
               <p style="margin-top: 20px; color: #666;">请尽快处理此询价。</p>
             </div>
@@ -235,4 +292,81 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+async function verifyTurnstileToken({ token, ip, secret }: { token: string; ip: string; secret: string }) {
+  const body = new URLSearchParams({
+    secret,
+    response: token,
+  });
+
+  if (ip) {
+    body.append("remoteip", ip);
+  }
+
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+
+  return response.json();
+}
+
+function isFormFillDelayValid(formLoadedAt?: number) {
+  const loadedAt = Number(formLoadedAt);
+  if (!Number.isFinite(loadedAt)) {
+    return false;
+  }
+
+  return Date.now() - loadedAt >= MIN_FORM_FILL_MS;
+}
+
+function getClientIp(request: NextRequest) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  return request.headers.get("x-real-ip") || "";
+}
+
+function isRateLimited(ip: string) {
+  if (!ip) {
+    return false;
+  }
+
+  cleanupOldRequests(ip);
+  const requests = ipRequestLog.get(ip) || [];
+  return requests.length >= RATE_LIMIT_MAX_REQUESTS;
+}
+
+function recordRequest(ip: string) {
+  if (!ip) {
+    return;
+  }
+
+  cleanupOldRequests(ip);
+  const requests = ipRequestLog.get(ip) || [];
+  requests.push(Date.now());
+  ipRequestLog.set(ip, requests);
+}
+
+function cleanupOldRequests(ip: string) {
+  const requests = ipRequestLog.get(ip);
+  if (!requests) {
+    return;
+  }
+
+  const now = Date.now();
+  const filtered = requests.filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS);
+
+  if (filtered.length === 0) {
+    ipRequestLog.delete(ip);
+    return;
+  }
+
+  ipRequestLog.set(ip, filtered);
 }
