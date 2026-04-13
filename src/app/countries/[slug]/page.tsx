@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import InquiryChecklistCard from "@/components/InquiryChecklistCard";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import TrackedLink from "@/components/TrackedLink";
@@ -10,6 +10,7 @@ import { mergeServices } from "@/lib/service-content";
 import { countryContent } from "@/lib/country-content";
 import { serviceDetailContent } from "@/lib/service-detail-content";
 import { serviceCaseContent } from "@/lib/service-case-content";
+import { inquiryTemplateContent } from "@/lib/inquiry-template-content";
 
 export const dynamic = "force-dynamic";
 
@@ -142,6 +143,27 @@ export default async function CountryPage({ params }: { params: { slug: string }
       </section>
 
       <section className="py-16 bg-bg border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-3xl bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="text-2xl font-serif text-navy font-bold mb-5">{country.name}市场更常见的业务特点</h2>
+            <ul className="space-y-3 list-disc pl-5 text-gray-600 leading-7">
+              {country.marketHighlights.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-3xl bg-white border border-gray-100 p-8 shadow-sm">
+            <h2 className="text-2xl font-serif text-navy font-bold mb-5">{country.name}本地交付更该提前确认什么</h2>
+            <ul className="space-y-3 list-disc pl-5 text-gray-600 leading-7">
+              {country.localDeliveryNotes.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-bg border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-4 mb-10">
             <div>
@@ -237,19 +259,11 @@ export default async function CountryPage({ params }: { params: { slug: string }
                   </TrackedLink>
                 </div>
               </div>
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-                <p className="text-sm text-gold mb-3">建议优先提供</p>
-                <ul className="space-y-3 text-sm text-white/85 leading-7">
-                  {country.consultationChecklist.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-                <div className="mt-5 space-y-2 text-sm text-white/75">
-                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gold" />可先判断线路方向</p>
-                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gold" />可先判断是否需清关预审</p>
-                  <p className="inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-gold" />可先判断是否要尾程派送到门</p>
-                </div>
-              </div>
+              <InquiryChecklistCard
+                title={inquiryTemplateContent.country.title}
+                items={[...country.consultationChecklist, ...inquiryTemplateContent.country.items.slice(3)]}
+                tips={inquiryTemplateContent.country.tips}
+              />
             </div>
           </div>
         </div>
@@ -278,6 +292,18 @@ export default async function CountryPage({ params }: { params: { slug: string }
               </Link>
               <Link href="/countries/italy" className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-navy hover:border-gold hover:text-gold">
                 意大利物流
+              </Link>
+              <Link href="/countries/netherlands" className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-navy hover:border-gold hover:text-gold">
+                荷兰物流
+              </Link>
+              <Link href="/countries/belgium" className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-navy hover:border-gold hover:text-gold">
+                比利时物流
+              </Link>
+              <Link href="/countries/spain" className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-navy hover:border-gold hover:text-gold">
+                西班牙物流
+              </Link>
+              <Link href="/countries/hungary" className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-navy hover:border-gold hover:text-gold">
+                匈牙利物流
               </Link>
             </div>
           </div>

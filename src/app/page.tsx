@@ -439,7 +439,7 @@ export default async function HomePage() {
             <p className="text-gray-600 max-w-3xl mx-auto">针对高频咨询国家，单独拆成国家页，更方便承接“中国到德国物流”“中国到法国物流”这类长尾搜索和询盘需求。</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {Object.entries(countryContent).map(([slug, item]) => (
+            {Object.entries(countryContent).slice(0, 8).map(([slug, item]) => (
               <Link key={slug} href={`/countries/${slug}`} className="rounded-2xl border border-gray-100 bg-bg p-6 shadow-sm hover:shadow-md transition-shadow group">
                 <p className="text-sm text-gold mb-3">国家专题页</p>
                 <h3 className="text-2xl font-serif text-navy font-bold mb-3 group-hover:text-gold transition-colors">{item.name}物流</h3>

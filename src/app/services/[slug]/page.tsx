@@ -10,6 +10,8 @@ import { getServiceBySlug, getServices, getSiteConfig } from "@/lib/data";
 import { iconMap, serviceScenarios, fallbackScenarios, serviceAdvantages, serviceProcess, mergeServices } from "@/lib/service-content";
 import { serviceDetailContent } from "@/lib/service-detail-content";
 import { serviceCaseContent } from "@/lib/service-case-content";
+import InquiryChecklistCard from "@/components/InquiryChecklistCard";
+import { inquiryTemplateContent } from "@/lib/inquiry-template-content";
 
 export const dynamic = "force-dynamic";
 
@@ -378,14 +380,11 @@ export default async function ServiceDetailPage({ params }: { params: { slug: st
                   </TrackedLink>
                 </div>
               </div>
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
-                <p className="text-sm text-gold mb-3">提交询价时建议包含</p>
-                <ul className="space-y-3 text-sm text-white/85 leading-7">
-                  {(consultationChecklist.length > 0 ? consultationChecklist : ["货物品名", "件数 / 包装类型", "重量体积", "目的地 / 收货地址", "期望时效或到货时间"]).map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
+              <InquiryChecklistCard
+                title={inquiryTemplateContent.service.title}
+                items={consultationChecklist.length > 0 ? [...consultationChecklist, ...inquiryTemplateContent.service.items.slice(3)] : inquiryTemplateContent.service.items}
+                tips={inquiryTemplateContent.service.tips}
+              />
             </div>
           </div>
         </div>
